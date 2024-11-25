@@ -1,0 +1,463 @@
+import React, {useEffect, useRef, useState} from 'react';
+import {useParams, useNavigate, useLocation} from 'react-router-dom';
+import {
+    AppBar,
+    Toolbar,
+    Typography,
+    Container,
+    Card,
+    CardContent,
+    CardMedia,
+    Grid,
+    Button,
+    List,
+    ListItem,
+    ListItemText,
+    Divider,
+    Paper,
+    IconButton,
+    Badge,
+    Box,
+} from '@mui/material';
+import ShareIcon from '@mui/icons-material/Share';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import DoorFrontIcon from '@mui/icons-material/DoorFront'
+import {useTranslation} from "react-i18next";
+import LanguageSwitcher from "../components/LanguageSwitcher";
+import {getRomanizedName} from "../utils/romainz";
+import axiosClient from "../utils/axiosClient";
+import {translateTextsDirectly} from "../utils/translateTextDirectly";
+import ActionButtons from "./ActionButtons";
+import {isLoggedInCheck} from "../utils/isLoggedInCheck";
+import FooterWithCart from "./FooterWithCart";
+import {generateCartItems} from "../utils/generateCartItems";
+
+const socketUrl = process.env.REACT_APP_SOCKET_URL;
+
+export interface MenuItem {
+    id: number;
+    roomId: number;
+    imageId: number;
+    imageUrl: string;
+    menuName: string;
+    price: number;
+    status: string;
+    description: string;
+    originalDescription: string;
+    generalizedName: string;
+    allergy: string;
+    originalAllergy: string;
+    spicyLevel: number;
+}
+
+export interface CartItem {
+    id: number;
+    roomId: number;
+    imageId: number;
+    imageUrl: string;
+    menuName: string;
+    price: number;
+    status: string;
+    sessionToken: string;
+    userId: string;
+    userName: string;
+}
+
+const Menu: React.FC = () => {
+    const location = useLocation();
+    const { t, i18n } = useTranslation();
+    const currentLang = i18n.language;
+    const params = new URLSearchParams(location.search);
+    const roomId = params.get('roomId');
+
+    const {sessionId: paramSessionId} = useParams<{ sessionId?: string }>();
+    const [sessionId, setSessionId] = useState<string | null>(paramSessionId || null);
+    const [cart, setCart] = useState<CartItem[]>([]);
+    const [menuImages, setMenuImages] = useState<string[]>([]);
+    const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+    const [pendingCartData, setPendingCartData] = useState<Record<string, any>>({});
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const navigate = useNavigate();
+    const ws = useRef<WebSocket | null>(null);
+
+    useEffect(() => {
+        if (!roomId) {
+            console.error('Room ID is missing.');
+            return;
+        }
+
+        setIsLoggedIn(isLoggedInCheck(roomId));
+
+        if (isLoggedInCheck(roomId)) {
+            const connectWebSocket = () => {
+                ws.current = new WebSocket(`${socketUrl}`);
+
+                ws.current.onopen = () => {
+                    console.log('WebSocket connection established.');
+                    const sessionToken = localStorage.getItem('sessionToken') || 'guest';
+                    const connectMessage = JSON.stringify({
+                        type: 'connect',
+                        roomId,
+                        sessionToken,
+                    });
+                    ws.current?.send(connectMessage);
+                    console.log('Sent connect message:', connectMessage);
+                };
+
+                ws.current.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        console.log('Received message from server:', data);
+
+                        if (data.type === 'connect' && data.status === 'success') {
+                            console.log('Room data received:', data.data);
+
+                            // `menuItems`가 비어 있으면 WebSocket 데이터를 임시 저장
+                            if (menuItems.length === 0) {
+                                console.warn('menuItems is not ready yet. Storing WebSocket data.');
+                                setPendingCartData(data.data);
+                            } else {
+                                // `menuItems`가 이미 로드된 경우 즉시 `cartItems` 생성
+                                const cartItems = generateCartItems(menuItems, data.data);
+                                console.log('Generated CartItems:', cartItems);
+                                setCart(cartItems);
+                            }
+                        } else if (data.type === 'choice') {
+                            // console.log('Updated room menu data:', data.data);
+                            // if (data.data) {
+                            //     setCart(data.data);
+                            // } else {
+                            //     console.error('Invalid room menu data:', data.data);
+                            // }
+                        }
+                    } catch (err) {
+                        console.error('Error parsing WebSocket message:', err);
+                    }
+                };
+
+                ws.current.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                };
+
+                ws.current.onclose = () => {
+                    console.log('WebSocket connection closed. Reconnecting in 5 seconds...');
+                    setTimeout(() => {
+                        connectWebSocket(); // 재연결 시도
+                    }, 5000);
+                };
+            };
+
+            connectWebSocket(); // WebSocket 초기 연결
+
+            return () => {
+                ws.current?.close();
+                console.log('WebSocket connection cleaned up.');
+            };
+        }
+    }, [roomId]);
+
+
+    useEffect(() => {
+        const fetchMenu = async () => {
+            try {
+                const response: MenuItem[] = await axiosClient.get(`/room/${roomId}/menu`);
+
+                const data = response.map((item) => ({
+                    ...item,
+                    originalDescription: item.description, // 원본 저장
+                    originalAllergy: item.allergy, // 원본 저장
+                }));
+
+                console.log('Menu data:', data);
+
+                // 이미지 검색 추가
+                const itemsWithImages = await fetchImagesForMenuItems(data);
+
+                console.log(itemsWithImages);
+
+                setMenuItems(itemsWithImages);
+
+                if (currentLang !== 'ko') {
+                    const translatedData = await updateDescriptions(itemsWithImages);
+                    setMenuItems(translatedData); // 번역된 데이터로 상태 업데이트
+                }
+            } catch (error) {
+                console.error('Failed to fetch menu:', error);
+            }
+        };
+
+        const fetchMenuImages = async () => {
+            try {
+                // response가 배열임을 명확히 지정
+                const response: { id: number; imageUrl: string }[] = await axiosClient.get(`/room/${roomId}/image`);
+
+                const data = response.map((item) => item.imageUrl); // imageUrl만 추출
+                console.log('Menu images:', data);
+                setMenuImages(data); // 상태 저장
+            } catch (error) {
+                console.error("Failed to fetch menu images:", error);
+            }
+        };
+
+        const fetchRoomInfo = async () => {
+            try {
+                const response = await axiosClient.get(`/room/${roomId}`);
+                const data = response.data;
+                console.log('Room data:', data);
+                // setRoomInfo(data);
+            } catch (error) {
+                console.error('Failed to fetch room info:', error);
+            }
+        }
+
+        fetchMenu();
+        fetchMenuImages();
+        fetchRoomInfo();
+    }, [roomId]);
+
+    useEffect(() => {
+        if (currentLang !== 'ko') {
+            const performTranslation = async () => {
+                const translatedData = await updateDescriptions(menuItems);
+                setMenuItems(translatedData);
+            };
+
+            performTranslation();
+        }
+    }, [currentLang]);
+
+    useEffect(() => {
+        if (menuItems.length > 0 && Object.keys(pendingCartData).length > 0) {
+            console.log('menuItems loaded. Processing pending WebSocket data.');
+            const cartItems = generateCartItems(menuItems, pendingCartData);
+            console.log('Generated CartItems from pending data:', cartItems);
+            setCart(cartItems);
+
+            // 임시 데이터 초기화
+            setPendingCartData({});
+        }
+    }, [menuItems, pendingCartData]);
+
+    const updateDescriptions = async (items: MenuItem[]): Promise<MenuItem[]> => {
+        if (currentLang === 'ko') return items;
+
+        // description과 allergy를 하나의 배열로 묶어서 처리
+        const textsToTranslate = items.flatMap((item) => [
+            item.originalDescription,
+            item.originalAllergy,
+        ]);
+
+        const translatedTexts = await translateTextsDirectly(textsToTranslate, currentLang);
+
+        // 번역 결과를 description과 allergy로 나눠서 적용
+        const updatedMenu = items.map((item, index) => {
+            const descriptionIndex = index * 2; // 각 description의 인덱스
+            const allergyIndex = descriptionIndex + 1; // 각 allergy의 인덱스
+            return {
+                ...item,
+                description: translatedTexts[descriptionIndex] || item.description,
+                allergy: translatedTexts[allergyIndex] || item.allergy,
+            };
+        });
+
+        return updatedMenu;
+    };
+
+    const extractImageUrls = (response: any): string[] => {
+        if (!response.items) return [];
+        return response.items.map((item: any) => item.link);
+    };
+
+    const fetchImagesForMenuItems = async (items: MenuItem[]): Promise<MenuItem[]> => {
+        const apiKey = process.env.REACT_APP_GOOGLE_API_KEY;
+        const searchEngineId = process.env.REACT_APP_GOOGLE_SEARCH_ENGINE_ID;
+
+        const updatedItems = await Promise.all(
+            items.map(async (item) => {
+                const query = encodeURIComponent(item.menuName);
+                const endpoint = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${query}&searchType=image`;
+
+                try {
+                    const response = await fetch(endpoint);
+                    const data = await response.json();
+
+                    const imageUrls = extractImageUrls(data);
+                    const imageUrl = imageUrls[0] || '';
+
+                    return {
+                        ...item,
+                        imageUrl,
+                    };
+                } catch (error) {
+                    console.error(`Failed to fetch image for ${item.generalizedName}:`, error);
+                    return {
+                        ...item,
+                        imageUrl: '',
+                    };
+                }
+            })
+        );
+
+        return updatedItems;
+    };
+
+    const handleAddToCart = (item: MenuItem, isGroup: boolean) => {
+        const quantity = 1; // 현재는 1로 고정, 필요하면 UI에서 수량을 받아올 수 있음
+
+        // WebSocket 연결 상태 확인
+        if (!ws.current || ws.current.readyState !== WebSocket.OPEN) {
+            console.error('WebSocket is not open. Current state:', ws.current?.readyState);
+            return;
+        }
+
+        const message = JSON.stringify({
+            type: 'choice',
+            menuId: item.id,
+            isGroup,
+            quantity,
+        });
+        ws.current.send(message);
+        console.log('Sent choice message to WebSocket:', message);
+    };
+
+    // 메뉴명을 로마자로 변환
+    const getDisplayName = (name: string) => {
+        return currentLang === 'ko' ? name : getRomanizedName(name);
+    };
+
+    return (
+        <div className="menu-container">
+            <AppBar position="static" style={{backgroundColor: '#4caf50', marginBottom: '16px'}}>
+                <Toolbar>
+                    <Typography variant="h6" style={{flexGrow: 1}} onClick={() => navigate('/')}>
+                        {t('welcome')}
+                    </Typography>
+                    <IconButton color="inherit" title="Language Selector">
+                        <LanguageSwitcher/>
+                    </IconButton>
+                    <IconButton color="inherit">
+                        <Badge badgeContent={cart.length} color="secondary">
+                            <ShoppingCartIcon/>
+                        </Badge>
+                    </IconButton>
+                </Toolbar>
+            </AppBar>
+
+            <Container>
+                <Typography variant="h5" gutterBottom align="center">
+                    {t('menuInformation')}
+                </Typography>
+
+                <img
+                    src={menuImages[0]}
+                    alt={"menu"}
+                    style={{
+                        width: '100%',
+                        height: 'auto',
+                        borderRadius: '8px',
+                        marginBottom: '16px',
+                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
+                    }}
+                />
+
+                <ActionButtons roomId={roomId} />
+
+                <Grid container spacing={3}>
+                    {menuItems.map((item) => (
+                        <Grid item xs={12} sm={6} md={4} key={item.id}>
+                            <Card
+                                style={{
+                                    borderRadius: '16px',
+                                    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
+                                    backgroundColor: '#fff',
+                                }}
+                            >
+                                <CardMedia
+                                    component="img"
+                                    alt={item.menuName}
+                                    height="200"
+                                    image={item.imageUrl || 'default-image-url.jpg'}
+                                    style={{ borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}
+                                />
+                                <CardContent>
+                                    <Box
+                                        display="flex"
+                                        justifyContent="space-between"
+                                        alignItems="center"
+                                        style={{ marginBottom: '8px' }}
+                                    >
+                                        <Typography variant="h6" style={{ fontWeight: 'bold', color: '#123456' }}>
+                                            {getDisplayName(item.menuName)}
+                                            {Array(item.spicyLevel)
+                                                .fill("🌶️")
+                                                .map((icon, index) => (
+                                                    <span key={index} style={{ fontSize: '16px', marginLeft: '2px' }}>
+                                        {icon}
+                                    </span>
+                                                ))}
+                                        </Typography>
+                                        <Typography variant="body1" color="textSecondary">
+                                            ₩{item.price.toLocaleString()}
+                                        </Typography>
+                                    </Box>
+                                    <Typography variant="body2" color="textSecondary" style={{ marginBottom: '8px' }}>
+                                        {currentLang === 'ko' ? item.originalDescription : item.description}
+                                    </Typography>
+                                    <Typography variant="body2" color="textSecondary" style={{ marginBottom: '8px' }}>
+                                        <strong>{t('allergy')}:</strong> {currentLang === 'ko' ? item.originalAllergy : item.allergy || t('none')}
+                                    </Typography>
+
+                                    <Box display="flex" justifyContent="space-between" gap="8px">
+                                        <Button
+                                            variant="contained"
+                                            startIcon={<AddShoppingCartIcon />}
+                                            style={{
+                                                backgroundColor: '#007bff',
+                                                color: '#fff',
+                                                fontWeight: 'bold',
+                                                textTransform: 'none',
+                                                borderRadius: '8px',
+                                                padding: '8px 12px',
+                                                flex: 1,
+                                                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                                            }}
+                                            onClick={() => handleAddToCart(item, false)}
+                                        >
+                                            {t('forMyself')}
+                                        </Button>
+
+                                        <Button
+                                            variant="contained"
+                                            startIcon={<ShareIcon />}
+                                            style={{
+                                                backgroundColor: '#ff6f42',
+                                                color: '#fff',
+                                                fontWeight: 'bold',
+                                                textTransform: 'none',
+                                                borderRadius: '8px',
+                                                padding: '8px 12px',
+                                                flex: 1,
+                                                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                                            }}
+                                            onClick={() => handleAddToCart(item, true)}
+                                        >
+                                            {t('forEveryone')}
+                                        </Button>
+                                    </Box>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
+
+            </Container>
+
+            <FooterWithCart cart={cart} />
+        </div>
+
+    );
+
+};
+
+export default Menu;

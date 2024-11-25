@@ -1,26 +1,22 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { Route, Routes } from 'react-router-dom';
+import Home from './pages/Home/Home';
+import Menu from './pages/Menu';
+import Room from "./pages/Room";
+import CameraSelect from "./pages/CameraSelect";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+const App: React.FC = () => {
+    return (
+        <div>
+            <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/room" element={<Room />} />
+                <Route path="/camera" element={<CameraSelect />} />
+                <Route path="/menu" element={<Menu />} />
+                <Route path="/menu/:sessionId" element={<Menu />} />
+            </Routes>
+        </div>
+    );
+};
 
 export default App;
