@@ -1,5 +1,5 @@
 {
-  "framework": "react",
+  "framework": "create-react-app",
   "features": {
     "previewModeBar": false
   }
