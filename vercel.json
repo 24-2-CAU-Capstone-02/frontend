@@ -1,0 +1,6 @@
+{
+  "framework": "react",
+  "features": {
+    "previewModeBar": false
+  }
+}
