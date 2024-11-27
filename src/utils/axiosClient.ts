@@ -12,8 +12,8 @@ const axiosClient = axios.create({
 // 요청 인터셉터
 axiosClient.interceptors.request.use(
     (config) => {
-        // 토큰이 필요한 경우 추가
-        const token = localStorage.getItem('sessionToken');
+        // localStorage에서 accessToken을 가져와 Authorization 헤더에 추가
+        const token = localStorage.getItem('accessToken');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -24,6 +24,7 @@ axiosClient.interceptors.request.use(
         return Promise.reject(error);
     }
 );
+
 
 // 응답 인터셉터
 axiosClient.interceptors.response.use(

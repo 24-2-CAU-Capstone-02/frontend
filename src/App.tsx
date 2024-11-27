@@ -4,6 +4,7 @@ import Home from './pages/Home/Home';
 import Menu from './pages/Menu';
 import Room from "./pages/Room";
 import CameraSelect from "./pages/CameraSelect";
+import AuthCallback from "./pages/AuthCallback";
 
 const App: React.FC = () => {
     return (
@@ -14,6 +15,7 @@ const App: React.FC = () => {
                 <Route path="/camera" element={<CameraSelect />} />
                 <Route path="/menu" element={<Menu />} />
                 <Route path="/menu/:sessionId" element={<Menu />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
             </Routes>
         </div>
     );

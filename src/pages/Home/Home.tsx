@@ -1,125 +1,149 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect } from 'react';
+import { useGoogleLogin } from '@react-oauth/google';
 import {
-    Button,
     AppBar,
     Toolbar,
     Typography,
-    BottomNavigation,
-    BottomNavigationAction,
-    Card,
-    CardContent,
-    CardMedia,
-    IconButton
+    Button,
+    IconButton,
+    Box,
+    Paper,
 } from '@mui/material';
 import LanguageSwitcher from "../../components/LanguageSwitcher";
-import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import { useNavigate } from "react-router-dom";
-import axiosClient from '../../utils/axiosClient'; // axios 클라이언트
+import { useTranslation } from 'react-i18next';
+import axiosClient from '../../utils/axiosClient';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import { ReactComponent as GoogleIcon } from '../../assets/google-icon.svg';
+
+const redirect_uri = process.env.REACT_APP_REDIRECT_URI || "http://localhost:3000";
 
 const Home: React.FC = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
-    const [value, setValue] = React.useState(0);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userName, setUserName] = useState<string | null>(null);
 
-    // Room 생성 및 카메라 화면으로 이동
-    const handleCreateRoomAndNavigate = async () => {
+    useEffect(() => {
+        const accessToken = localStorage.getItem('accessToken');
+        if (accessToken) {
+            setIsLoggedIn(true);
+            setUserName('User');
+        }
+    }, []);
+
+    const handleLoginSuccess = async (tokenResponse: any) => {
         try {
-            // Room 생성 API 호출
-            const response = await axiosClient.post('/room');
+            const serverResponse = await axiosClient.post(
+                '/auth/login',
+                { code: tokenResponse.code },
+            );
 
-            // 응답 구조 확인
-            console.log('Full response:', response);
-            console.log('Response data:', response.data);
+            const { accessToken: serverAccessToken } = serverResponse.data;
+            localStorage.setItem('accessToken', serverAccessToken);
 
-            const { roomId } = response.data || response; // 구조에 따라 적절히 디스트럭처링
-
-            // navigate(`/camera?roomId=${roomId}`);
-            navigate(`/camera?roomId=${roomId}`);
+            setIsLoggedIn(true);
+            setUserName('User');
         } catch (error) {
-            console.error('Failed to create room:', error);
-            alert(t('createRoomError'));
+            alert(t('error.loginFailed'));
         }
     };
 
+    const login = useGoogleLogin({
+        onSuccess: handleLoginSuccess,
+        onError: () => alert(t('error.loginFailed')),
+        flow: 'auth-code',
+        redirect_uri: redirect_uri,
+    });
+
     return (
-        <div className="home-container" style={{ paddingBottom: '56px' }}>
-            <AppBar position="static" style={{ backgroundColor: '#4caf50' }}>
+        <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+            {/* Header */}
+            <AppBar position="static" sx={{ backgroundColor: '#4caf50' }}>
                 <Toolbar>
-                    <Typography variant="h6" style={{ flexGrow: 1 }} onClick={() => navigate('/')}>
+                    <Typography variant="h6" sx={{ flexGrow: 1 }} onClick={() => navigate('/')}>
                         {t('welcome')}
                     </Typography>
-
-                    <IconButton color="inherit" title="Language Selector">
+                    <IconButton color="inherit" title={t('languageSelector')}>
                         <LanguageSwitcher />
                     </IconButton>
                 </Toolbar>
             </AppBar>
 
-            <main className="main-content" style={{ padding: '16px' }}>
-                <Typography variant="h5" gutterBottom>
-                    {t('popular')}
-                </Typography>
-                <Card className="menu-card" style={{ marginBottom: '16px' }}>
-                    <CardMedia
-                        component="img"
-                        alt="Spicy Pork Stir-fry"
-                        height="140"
-                        image="https://i.namu.wiki/i/npjMucg7sLxIm8Uca8O3lygeM9UX2Dsu4RVnVxcDdaItsLZ6w0N0Ju54gVqn8O7r7taBR6bAEwL9qOLoUKKbzg.webp"
-                    />
-                    <CardContent>
-                        <Typography variant="h6" component="div">
-                            {t('spicyPork')} 🌶️🌶️🌶️
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            A spicy stir-fried pork dish, perfect to enjoy with rice.
-                        </Typography>
-                    </CardContent>
-                </Card>
-            </main>
-
-            <BottomNavigation
-                value={value}
-                onChange={(event, newValue) => setValue(newValue)}
-                showLabels
-                style={{ position: 'fixed', bottom: 0, width: '100%' }}
+            {/* Main Content */}
+            <Box
+                sx={{
+                    flexGrow: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'column',
+                    gap: 2,
+                    backgroundColor: '#f5f5f5',
+                }}
             >
-                <BottomNavigationAction
-                    label={t('Home')}
-                    style={{ color: value === 0 ? '#4caf50' : 'inherit' }}
-                    onClick={() => setValue(0)}
-                />
-
-                <Button
-                    variant="contained"
-                    style={{
-                        position: 'absolute',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        zIndex: 1,
-                        marginBottom: '12px',
-                        borderRadius: '50%',
-                        width: '56px',
-                        height: '56px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: '#4caf50',
-                        color: 'white',
+                <Paper
+                    elevation={3}
+                    sx={{
+                        p: 4,
+                        textAlign: 'center',
+                        borderRadius: '12px',
+                        backgroundColor: '#fff',
+                        maxWidth: '400px',
                     }}
-                    onClick={handleCreateRoomAndNavigate}
                 >
-                    <CameraAltIcon style={{ fontSize: '36px' }} />
-                </Button>
+                    {isLoggedIn ? (
+                        <Button
+                            variant="contained"
+                            onClick={() => navigate('/room')}
+                            sx={{
+                                fontSize: '18px',
+                                padding: '12px 24px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 1,
+                                borderRadius: '8px',
+                                textTransform: 'none',
+                                backgroundColor: '#34A853',
+                                color: '#fff',
+                                '&:hover': {
+                                    backgroundColor: '#2b8c43',
+                                },
+                            }}
+                        >
+                            <CameraAltIcon />
+                            {t('createRoom')}
+                        </Button>
 
-                <BottomNavigationAction
-                    label={t('Settings')}
-                    style={{ color: value === 2 ? '#4caf50' : 'gray' }}
-                    onClick={() => setValue(2)}
-                    disabled={true}
-                />
-            </BottomNavigation>
-        </div>
+                    ) : (
+                        <Button
+                            variant="contained"
+                            onClick={() => login()}
+                            sx={{
+                                fontSize: '18px',
+                                padding: '12px 24px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 1,
+                                borderRadius: '8px',
+                                textTransform: 'none',
+                                backgroundColor: '#4285F4',
+                                color: '#fff',
+                                '&:hover': {
+                                    backgroundColor: '#357ae8',
+                                },
+                            }}
+                        >
+                            <GoogleIcon style={{ width: '20px', height: '20px' }} />
+                            {t('loginWithGoogle')}
+                        </Button>
+
+                    )}
+                </Paper>
+            </Box>
+        </Box>
     );
 };
 

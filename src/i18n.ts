@@ -16,6 +16,16 @@ i18n.use(initReactI18next).init({
                 "menuInformation": "Menu Information",
                 "shareStart": "Share",
                 "login": "Login",
+
+                "languageSelector": "Language Selector",
+                "createRoom": "Create Room",
+                "loginWithGoogle": "Login with Google",
+                "error": {
+                    "createRoom": "Failed to create room",
+                    "fetchUserInfo": "Failed to fetch user info",
+                    "loginFailed": "Google Login failed. Please try again."
+                },
+
                 "description": {
                     "boneGuk": "A nourishing soup made with beef bones, perfect for a hangover.",
                     "spicyPork": "A spicy stir-fried pork dish, perfect to enjoy with rice.",
@@ -36,7 +46,6 @@ i18n.use(initReactI18next).init({
                 },
 
                 // room
-                "createRoom": "Create Analysis Room",
                 "createRoomDescription": "Create a room to analyze menus. Username is required, password is optional.",
                 "username": "Username",
                 "passwordOptional": "Password (Optional)",
@@ -87,6 +96,11 @@ i18n.use(initReactI18next).init({
                 "menuInformation": "메뉴 정보",
                 "shareStart": "공유하기",
                 "login": "로그인",
+
+                "languageSelector": "언어 선택",
+                "createRoom": "방 생성",
+                "loginWithGoogle": "구글로 로그인",
+
                 "description": {
                     "boneGuk": "해장에 좋은 소 뼈로 만든 영양 국.",
                     "spicyPork": "밥과 함께 즐기기 좋은 매운 제육볶음.",
@@ -107,7 +121,6 @@ i18n.use(initReactI18next).init({
                 },
 
                 // room
-                "createRoom": "분석 방 생성",
                 "createRoomDescription": "메뉴 분석을 위해 방을 생성하세요. 사용자 이름은 필수, 비밀번호는 선택입니다.",
                 "username": "사용자 이름",
                 "passwordOptional": "비밀번호 (선택 사항)",
