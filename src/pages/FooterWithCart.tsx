@@ -7,11 +7,15 @@ const FooterWithCart: React.FC<{ cart: CartItem[] }> = ({ cart }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { t } = useTranslation();
 
-    // 총 가격 계산
-    const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
+    // 총 가격 계산 (quantity 포함)
+    const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
     // Modal 열기/닫기
     const toggleModal = () => setIsModalOpen((prev) => !prev);
+
+    // 공유된 메뉴와 개인 메뉴 분리 및 정렬
+    const sharedCart = cart.filter((item) => item.userName === 'Shared Group');
+    const personalCart = cart.filter((item) => item.userName !== 'Shared Group').sort((a, b) => a.userName.localeCompare(b.userName));
 
     return (
         <>
@@ -101,17 +105,60 @@ const FooterWithCart: React.FC<{ cart: CartItem[] }> = ({ cart }) => {
                         {t('selectedMenuItems')}
                     </Typography>
                     <Divider />
-                    <List>
-                        {cart.map((item) => (
-                            <ListItem key={item.id} sx={{ padding: '8px 0' }}>
-                                <ListItemText
-                                    primary={item.menuName}
-                                    secondary={`${t('price')}: ₩${item.price.toLocaleString()}`}
-                                />
-                            </ListItem>
-                        ))}
-                    </List>
-                    <Divider />
+
+                    {/* 공유된 메뉴 */}
+                    {sharedCart.length > 0 && (
+                        <>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', marginTop: '16px' }}>
+                                {t('sharedMenu')}
+                            </Typography>
+                            <List>
+                                {sharedCart.map((item) => (
+                                    <ListItem key={item.id} sx={{ padding: '8px 0' }}>
+                                        <ListItemText
+                                            primary={`${item.menuName} (x${item.quantity})`}
+                                            secondary={`${t('price')}: ₩${(item.price * item.quantity).toLocaleString()}`}
+                                        />
+                                    </ListItem>
+                                ))}
+                            </List>
+                            <Divider
+                                sx={{
+                                    borderStyle: 'dashed',
+                                    borderWidth: '1px',
+                                    borderColor: '#cccccc',
+                                }}
+                            />
+                        </>
+                    )}
+
+                    {/* 개인 메뉴 */}
+                    {personalCart.length > 0 && (
+                        <>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', marginTop: '16px' }}>
+                                {t('personalMenu')}
+                            </Typography>
+                            <List>
+                                {personalCart.map((item) => (
+                                    <ListItem key={item.id} sx={{ padding: '8px 0' }}>
+                                        <ListItemText
+                                            primary={`${item.menuName} (x${item.quantity})`}
+                                            secondary={`${t('price')}: ₩${(item.price * item.quantity).toLocaleString()} | ${t('user')}: ${item.userName}`}
+                                        />
+                                    </ListItem>
+                                ))}
+                            </List>
+                            <Divider
+                                sx={{
+                                    borderStyle: 'dashed',
+                                    borderWidth: '1px',
+                                    borderColor: '#cccccc',
+                                }}
+                            />
+                        </>
+                    )}
+
+                    {/* 총 가격 */}
                     <Typography variant="h6" align="right" sx={{ marginTop: '16px' }}>
                         {`${t('total')}: ₩${totalPrice.toLocaleString()}`}
                     </Typography>

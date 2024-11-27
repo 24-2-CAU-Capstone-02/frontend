@@ -34,13 +34,13 @@ const Home: React.FC = () => {
 
     const handleLoginSuccess = async (tokenResponse: any) => {
         try {
-            const serverResponse = await axiosClient.post(
+            const serverResponse: any = await axiosClient.post(
                 '/auth/login',
                 { code: tokenResponse.code },
             );
 
-            const { accessToken: serverAccessToken } = serverResponse.data;
-            localStorage.setItem('accessToken', serverAccessToken);
+            const rawAccessToken = serverResponse.accessToken.replace("Bearer ", "");
+            localStorage.setItem('accessToken', rawAccessToken);
 
             setIsLoggedIn(true);
             setUserName('User');
@@ -55,6 +55,17 @@ const Home: React.FC = () => {
         flow: 'auth-code',
         redirect_uri: redirect_uri,
     });
+
+    const handleCreateRoomAndNavigate = async () => {
+        try {
+            const response: any = await axiosClient.post('/room');
+            const { roomId } = response;
+            navigate(`/camera?roomId=${roomId}`);
+        } catch (error) {
+            console.error('Failed to create room:', error);
+            alert('Error creating room');
+        }
+    };
 
     return (
         <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -95,7 +106,7 @@ const Home: React.FC = () => {
                     {isLoggedIn ? (
                         <Button
                             variant="contained"
-                            onClick={() => navigate('/room')}
+                            onClick={handleCreateRoomAndNavigate}
                             sx={{
                                 fontSize: '18px',
                                 padding: '12px 24px',

@@ -81,6 +81,8 @@ i18n.use(initReactI18next).init({
                 "close": "Close",
                 "forMyself": "For Myself",
                 "forEveryone": "For Everyone",
+                "sharedMenu": "Shared Menu",
+                "personalMenu": "Personal Menu",
             }
         },
         ko: {
@@ -156,6 +158,8 @@ i18n.use(initReactI18next).init({
                 "close": "닫기",
                 "forMyself": "개인용",
                 "forEveryone": "공유용",
+                "sharedMenu": "공유된 메뉴",
+                "personalMenu": "개인 메뉴",
             }
         }
     },

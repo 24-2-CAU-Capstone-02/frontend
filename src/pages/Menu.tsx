@@ -62,6 +62,7 @@ export interface CartItem {
     sessionToken: string;
     userId: string;
     userName: string;
+    quantity: number;
 }
 
 const Menu: React.FC = () => {
@@ -73,6 +74,7 @@ const Menu: React.FC = () => {
 
     const {sessionId: paramSessionId} = useParams<{ sessionId?: string }>();
     const [sessionId, setSessionId] = useState<string | null>(paramSessionId || null);
+    const [userInfo, setUserInfo] = useState<any[]>([]);
     const [cart, setCart] = useState<CartItem[]>([]);
     const [menuImages, setMenuImages] = useState<string[]>([]);
     const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -113,23 +115,25 @@ const Menu: React.FC = () => {
                         if (data.type === 'connect' && data.status === 'success') {
                             console.log('Room data received:', data.data);
 
-                            // `menuItems`가 비어 있으면 WebSocket 데이터를 임시 저장
                             if (menuItems.length === 0) {
                                 console.warn('menuItems is not ready yet. Storing WebSocket data.');
                                 setPendingCartData(data.data);
                             } else {
-                                // `menuItems`가 이미 로드된 경우 즉시 `cartItems` 생성
-                                const cartItems = generateCartItems(menuItems, data.data);
-                                console.log('Generated CartItems:', cartItems);
+                                setPendingCartData(data.data);
+                                const cartItems = generateCartItems(menuItems, data.data, userInfo);
                                 setCart(cartItems);
                             }
                         } else if (data.type === 'choice') {
-                            // console.log('Updated room menu data:', data.data);
-                            // if (data.data) {
-                            //     setCart(data.data);
-                            // } else {
-                            //     console.error('Invalid room menu data:', data.data);
-                            // }
+                            if (data.data) {
+                                setPendingCartData((prevData) => ({
+                                    ...prevData,
+                                    ...data.data,
+                                }));
+                                const cartItems = generateCartItems(menuItems, pendingCartData, userInfo);
+                                setCart(cartItems);
+                            } else {
+                                console.error('Invalid room menu data:', data.data);
+                            }
                         }
                     } catch (err) {
                         console.error('Error parsing WebSocket message:', err);
@@ -143,12 +147,12 @@ const Menu: React.FC = () => {
                 ws.current.onclose = () => {
                     console.log('WebSocket connection closed. Reconnecting in 5 seconds...');
                     setTimeout(() => {
-                        connectWebSocket(); // 재연결 시도
+                        connectWebSocket();
                     }, 5000);
                 };
             };
 
-            connectWebSocket(); // WebSocket 초기 연결
+            connectWebSocket();
 
             return () => {
                 ws.current?.close();
@@ -165,22 +169,21 @@ const Menu: React.FC = () => {
 
                 const data = response.map((item) => ({
                     ...item,
-                    originalDescription: item.description, // 원본 저장
-                    originalAllergy: item.allergy, // 원본 저장
+                    originalDescription: item.description,
+                    originalAllergy: item.allergy,
                 }));
 
                 console.log('Menu data:', data);
 
                 // 이미지 검색 추가
                 const itemsWithImages = await fetchImagesForMenuItems(data);
-
                 console.log(itemsWithImages);
 
                 setMenuItems(itemsWithImages);
 
                 if (currentLang !== 'ko') {
                     const translatedData = await updateDescriptions(itemsWithImages);
-                    setMenuItems(translatedData); // 번역된 데이터로 상태 업데이트
+                    setMenuItems(translatedData);
                 }
             } catch (error) {
                 console.error('Failed to fetch menu:', error);
@@ -192,9 +195,9 @@ const Menu: React.FC = () => {
                 // response가 배열임을 명확히 지정
                 const response: { id: number; imageUrl: string }[] = await axiosClient.get(`/room/${roomId}/image`);
 
-                const data = response.map((item) => item.imageUrl); // imageUrl만 추출
+                const data = response.map((item) => item.imageUrl);
                 console.log('Menu images:', data);
-                setMenuImages(data); // 상태 저장
+                setMenuImages(data);
             } catch (error) {
                 console.error("Failed to fetch menu images:", error);
             }
@@ -202,10 +205,14 @@ const Menu: React.FC = () => {
 
         const fetchRoomInfo = async () => {
             try {
-                const response = await axiosClient.get(`/room/${roomId}`);
-                const data = response.data;
-                console.log('Room data:', data);
-                // setRoomInfo(data);
+                const response: any = await axiosClient.get(`/room/${roomId}`);
+                const { memberList } = response;
+
+                if (Array.isArray(memberList)) {
+                    setUserInfo(memberList);
+                } else {
+                    console.error('Invalid memberList format:', memberList);
+                }
             } catch (error) {
                 console.error('Failed to fetch room info:', error);
             }
@@ -229,15 +236,14 @@ const Menu: React.FC = () => {
 
     useEffect(() => {
         if (menuItems.length > 0 && Object.keys(pendingCartData).length > 0) {
-            console.log('menuItems loaded. Processing pending WebSocket data.');
-            const cartItems = generateCartItems(menuItems, pendingCartData);
+            const cartItems = generateCartItems(menuItems, pendingCartData, userInfo);
             console.log('Generated CartItems from pending data:', cartItems);
             setCart(cartItems);
 
             // 임시 데이터 초기화
             setPendingCartData({});
         }
-    }, [menuItems, pendingCartData]);
+    }, [menuItems, pendingCartData, userInfo]);
 
     const updateDescriptions = async (items: MenuItem[]): Promise<MenuItem[]> => {
         if (currentLang === 'ko') return items;
@@ -344,7 +350,7 @@ const Menu: React.FC = () => {
                 </Toolbar>
             </AppBar>
 
-            <Container>
+            <Container style={{ paddingBottom: '80px' }}>
                 <Typography variant="h5" gutterBottom align="center">
                     {t('menuInformation')}
                 </Typography>

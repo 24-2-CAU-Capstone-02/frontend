@@ -1,25 +1,44 @@
-import {CartItem, MenuItem} from "../pages/Menu";
+import { CartItem, MenuItem } from "../pages/Menu";
 
-export const generateCartItems = (menuItems: MenuItem[], websocketData: Record<string, any>): CartItem[] => {
-    return Object.entries(websocketData).map(([key, value]) => {
-        const matchingItem = menuItems.find((item) => item.id === Number(key));
+export const generateCartItems = (
+    menuItems: MenuItem[],
+    websocketData: Record<string, any>,
+    userInfo: any[]
+): CartItem[] => {
+    const cartItems: CartItem[] = [];
+
+    Object.entries(websocketData).forEach(([menuKey, value]) => {
+        const matchingItem = menuItems.find((item) => item.id === Number(menuKey));
 
         if (matchingItem) {
-            return {
-                id: matchingItem.id,
-                roomId: matchingItem.roomId,
-                imageId: matchingItem.imageId,
-                imageUrl: matchingItem.imageUrl,
-                menuName: matchingItem.menuName,
-                price: matchingItem.price,
-                status: matchingItem.status,
-                sessionToken: localStorage.getItem('sessionToken') || 'guest',
-                userId: (value as any).userId || 'default-user-id',
-                userName: (value as any).userName || 'default-user-name',
-            };
+            // value 객체의 각 sessionToken(key)과 quantity(value)를 순회
+            Object.entries(value as Record<string, string>).forEach(([sessionToken, quantity]) => {
+                const user = userInfo.find((u) => u.sessionToken === sessionToken) || {};
+
+                // 공용 그룹 처리
+                const isGroup = sessionToken === 'group';
+                const userName = isGroup ? 'Shared Group' : user.username || 'default-user-name';
+                const userId = isGroup ? 'shared-group-id' : user.id || 'default-user-id';
+
+                // CartItem 생성 및 추가
+                cartItems.push({
+                    id: matchingItem.id,
+                    roomId: matchingItem.roomId,
+                    imageId: matchingItem.imageId,
+                    imageUrl: matchingItem.imageUrl,
+                    menuName: matchingItem.menuName,
+                    price: matchingItem.price,
+                    status: matchingItem.status,
+                    sessionToken: sessionToken,
+                    userId: userId,
+                    userName: userName,
+                    quantity: Number(quantity),
+                });
+            });
         } else {
-            console.warn(`No matching MenuItem found for key: ${key}`);
-            return null;
+            console.warn(`No matching MenuItem found for menuKey: ${menuKey}`);
         }
-    }).filter((item): item is CartItem => item !== null);
+    });
+
+    return cartItems;
 };
