@@ -61,9 +61,28 @@ const Home: React.FC = () => {
             const response: any = await axiosClient.post('/room');
             const { roomId } = response;
             navigate(`/camera?roomId=${roomId}`);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to create room:', error);
-            alert('Error creating room');
+
+            console.log(error.response.status);
+
+            // 403 오류 처리: 로그아웃 상태로 전환
+            if (error.response?.status === 403) {
+                console.error('Access token is invalid or expired. Logging out...');
+
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('roomId');
+                localStorage.removeItem('memberId');
+                localStorage.removeItem('sessionToken');
+                localStorage.removeItem('username');
+
+                setIsLoggedIn(false);
+                setUserName(null);
+                alert(t('error.sessionExpired'));
+                window.location.reload();
+            } else {
+                alert('Error creating room');
+            }
         }
     };
 

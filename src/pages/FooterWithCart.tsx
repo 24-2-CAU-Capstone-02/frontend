@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
-import { Modal, Box, Typography, Button, List, ListItem, ListItemText, Divider, Badge } from '@mui/material';
-import { CartItem } from './Menu';
+import { Modal, Box, Typography, Button, List, ListItem, ListItemText, Divider, Badge, IconButton } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
+import { CartItem, MenuItem } from "../type/types";
 
-const FooterWithCart: React.FC<{ cart: CartItem[] }> = ({ cart }) => {
+const FooterWithCart: React.FC<{
+    menu: MenuItem[];
+    cart: CartItem[];
+    handleAddToCart: (item: MenuItem, isGroup: boolean, quantity: number) => void;
+}> = ({ menu, cart, handleAddToCart }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { t } = useTranslation();
 
@@ -16,6 +22,31 @@ const FooterWithCart: React.FC<{ cart: CartItem[] }> = ({ cart }) => {
     // 공유된 메뉴와 개인 메뉴 분리 및 정렬
     const sharedCart = cart.filter((item) => item.userName === 'Shared Group');
     const personalCart = cart.filter((item) => item.userName !== 'Shared Group').sort((a, b) => a.userName.localeCompare(b.userName));
+
+    const handleIncreaseQuantity = (item: CartItem) => {
+        const menuItem = menu.find((menuItem) => menuItem.id === item.id);
+        if (menuItem) {
+            const newQuantity = item.quantity + 1;
+            handleAddToCart(menuItem, item.userName === 'Shared Group', newQuantity);
+        }
+    };
+
+    const handleDecreaseQuantity = (item: CartItem) => {
+        if (item.quantity > 1) {
+            const menuItem = menu.find((menuItem) => menuItem.id === item.id);
+            if (menuItem) {
+                const newQuantity = item.quantity - 1;
+                handleAddToCart(menuItem, item.userName === 'Shared Group', newQuantity);
+            }
+        }
+    };
+
+    const handleRemoveItem = (item: CartItem) => {
+        const menuItem = menu.find((menuItem) => menuItem.id === item.id);
+        if (menuItem) {
+            handleAddToCart(menuItem, item.userName === 'Shared Group', 0); // 수량을 0으로 설정
+        }
+    };
 
     return (
         <>
@@ -106,7 +137,6 @@ const FooterWithCart: React.FC<{ cart: CartItem[] }> = ({ cart }) => {
                     </Typography>
                     <Divider />
 
-                    {/* 공유된 메뉴 */}
                     {sharedCart.length > 0 && (
                         <>
                             <Typography variant="subtitle1" sx={{ fontWeight: 'bold', marginTop: '16px' }}>
@@ -114,25 +144,85 @@ const FooterWithCart: React.FC<{ cart: CartItem[] }> = ({ cart }) => {
                             </Typography>
                             <List>
                                 {sharedCart.map((item) => (
-                                    <ListItem key={item.id} sx={{ padding: '8px 0' }}>
+                                    <ListItem
+                                        key={item.id}
+                                        sx={{
+                                            padding: '8px 0',
+                                            position: 'relative',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'flex-start',
+                                        }}
+                                    >
+                                        <IconButton
+                                            size="small"
+                                            sx={{
+                                                position: 'absolute',
+                                                top: '8px',
+                                                right: '8px',
+                                                width: 24,
+                                                height: 24,
+                                                padding: '2px',
+                                                borderRadius: '50%',
+                                            }}
+                                            onClick={() => handleRemoveItem(item)}
+                                        >
+                                            ✕
+                                        </IconButton>
+
                                         <ListItemText
-                                            primary={`${item.menuName} (x${item.quantity})`}
+                                            primary={item.menuName}
                                             secondary={`${t('price')}: ₩${(item.price * item.quantity).toLocaleString()}`}
                                         />
+
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+                                            <IconButton
+                                                size="small"
+                                                sx={{
+                                                    width: 28,
+                                                    height: 28,
+                                                    padding: '2px',
+                                                    backgroundColor: '#f5f5f5',
+                                                    borderRadius: '50%',
+                                                    '&:hover': { backgroundColor: '#e0e0e0' },
+                                                }}
+                                                onClick={() => handleDecreaseQuantity(item)}
+                                                disabled={item.quantity <= 1}
+                                            >
+                                                <RemoveIcon fontSize="small" />
+                                            </IconButton>
+                                            <Typography
+                                                sx={{
+                                                    fontSize: '0.875rem',
+                                                    fontWeight: 'bold',
+                                                    minWidth: '24px',
+                                                    textAlign: 'center',
+                                                }}
+                                            >
+                                                {item.quantity}
+                                            </Typography>
+                                            <IconButton
+                                                size="small"
+                                                sx={{
+                                                    width: 28,
+                                                    height: 28,
+                                                    padding: '2px',
+                                                    backgroundColor: '#f5f5f5',
+                                                    borderRadius: '50%',
+                                                    '&:hover': { backgroundColor: '#e0e0e0' },
+                                                }}
+                                                onClick={() => handleIncreaseQuantity(item)}
+                                            >
+                                                <AddIcon fontSize="small" />
+                                            </IconButton>
+                                        </Box>
                                     </ListItem>
                                 ))}
                             </List>
-                            <Divider
-                                sx={{
-                                    borderStyle: 'dashed',
-                                    borderWidth: '1px',
-                                    borderColor: '#cccccc',
-                                }}
-                            />
+                            <Divider sx={{ borderStyle: 'dashed', borderWidth: '1px', borderColor: '#cccccc' }} />
                         </>
                     )}
 
-                    {/* 개인 메뉴 */}
                     {personalCart.length > 0 && (
                         <>
                             <Typography variant="subtitle1" sx={{ fontWeight: 'bold', marginTop: '16px' }}>
@@ -140,21 +230,84 @@ const FooterWithCart: React.FC<{ cart: CartItem[] }> = ({ cart }) => {
                             </Typography>
                             <List>
                                 {personalCart.map((item) => (
-                                    <ListItem key={item.id} sx={{ padding: '8px 0' }}>
+                                    <ListItem
+                                        key={item.id}
+                                        sx={{
+                                            padding: '8px 0',
+                                            position: 'relative',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'flex-start',
+                                        }}
+                                    >
+                                        <IconButton
+                                            size="small"
+                                            sx={{
+                                                position: 'absolute',
+                                                top: '8px',
+                                                right: '8px',
+                                                width: 24,
+                                                height: 24,
+                                                padding: '2px',
+                                                borderRadius: '50%',
+                                            }}
+                                            onClick={() => handleRemoveItem(item)}
+                                        >
+                                            ✕
+                                        </IconButton>
+
                                         <ListItemText
-                                            primary={`${item.menuName} (x${item.quantity})`}
-                                            secondary={`${t('price')}: ₩${(item.price * item.quantity).toLocaleString()} | ${t('user')}: ${item.userName}`}
+                                            primary={item.menuName}
+                                            secondary={`${t('price')}: ₩${(item.price * item.quantity).toLocaleString()}${
+                                                item.userName !== 'Shared Group' ? ` | ${t('user')}: ${item.userName}` : ''
+                                            }`}
                                         />
+
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+                                            <IconButton
+                                                size="small"
+                                                sx={{
+                                                    width: 28,
+                                                    height: 28,
+                                                    padding: '2px',
+                                                    backgroundColor: '#f5f5f5',
+                                                    borderRadius: '50%',
+                                                    '&:hover': { backgroundColor: '#e0e0e0' },
+                                                }}
+                                                onClick={() => handleDecreaseQuantity(item)}
+                                                disabled={item.quantity <= 1}
+                                            >
+                                                <RemoveIcon fontSize="small" />
+                                            </IconButton>
+                                            <Typography
+                                                sx={{
+                                                    fontSize: '0.875rem',
+                                                    fontWeight: 'bold',
+                                                    minWidth: '24px',
+                                                    textAlign: 'center',
+                                                }}
+                                            >
+                                                {item.quantity}
+                                            </Typography>
+                                            <IconButton
+                                                size="small"
+                                                sx={{
+                                                    width: 28,
+                                                    height: 28,
+                                                    padding: '2px',
+                                                    backgroundColor: '#f5f5f5',
+                                                    borderRadius: '50%',
+                                                    '&:hover': { backgroundColor: '#e0e0e0' },
+                                                }}
+                                                onClick={() => handleIncreaseQuantity(item)}
+                                            >
+                                                <AddIcon fontSize="small" />
+                                            </IconButton>
+                                        </Box>
                                     </ListItem>
                                 ))}
                             </List>
-                            <Divider
-                                sx={{
-                                    borderStyle: 'dashed',
-                                    borderWidth: '1px',
-                                    borderColor: '#cccccc',
-                                }}
-                            />
+                            <Divider sx={{ borderStyle: 'dashed', borderWidth: '1px', borderColor: '#cccccc' }} />
                         </>
                     )}
 

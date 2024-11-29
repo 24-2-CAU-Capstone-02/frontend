@@ -32,38 +32,9 @@ import ActionButtons from "./ActionButtons";
 import {isLoggedInCheck} from "../utils/isLoggedInCheck";
 import FooterWithCart from "./FooterWithCart";
 import {generateCartItems} from "../utils/generateCartItems";
+import {CartItem, MenuItem} from "../type/types";
 
 const socketUrl = process.env.REACT_APP_SOCKET_URL;
-
-export interface MenuItem {
-    id: number;
-    roomId: number;
-    imageId: number;
-    imageUrl: string;
-    menuName: string;
-    price: number;
-    status: string;
-    description: string;
-    originalDescription: string;
-    generalizedName: string;
-    allergy: string;
-    originalAllergy: string;
-    spicyLevel: number;
-}
-
-export interface CartItem {
-    id: number;
-    roomId: number;
-    imageId: number;
-    imageUrl: string;
-    menuName: string;
-    price: number;
-    status: string;
-    sessionToken: string;
-    userId: string;
-    userName: string;
-    quantity: number;
-}
 
 const Menu: React.FC = () => {
     const location = useLocation();
@@ -107,7 +78,7 @@ const Menu: React.FC = () => {
                     console.log('Sent connect message:', connectMessage);
                 };
 
-                ws.current.onmessage = (event) => {
+                ws.current.onmessage = async (event) => {
                     try {
                         const data = JSON.parse(event.data);
                         console.log('Received message from server:', data);
@@ -121,8 +92,13 @@ const Menu: React.FC = () => {
                             } else {
                                 setPendingCartData(data.data);
                                 const cartItems = generateCartItems(menuItems, data.data, userInfo);
+                                console.log('Generated CartItems from WebSocket data:', cartItems);
                                 setCart(cartItems);
                             }
+
+                            // 사용자 정보 갱신
+                            console.log('Fetching updated user information...');
+                            await fetchRoomInfo();
                         } else if (data.type === 'choice') {
                             if (data.data) {
                                 setPendingCartData((prevData) => ({
@@ -134,6 +110,10 @@ const Menu: React.FC = () => {
                             } else {
                                 console.error('Invalid room menu data:', data.data);
                             }
+
+                            // 사용자 정보 갱신
+                            console.log('Fetching updated user information...');
+                            await fetchRoomInfo();
                         }
                     } catch (err) {
                         console.error('Error parsing WebSocket message:', err);
@@ -162,62 +142,62 @@ const Menu: React.FC = () => {
     }, [roomId]);
 
 
-    useEffect(() => {
-        const fetchMenu = async () => {
-            try {
-                const response: MenuItem[] = await axiosClient.get(`/room/${roomId}/menu`);
+    const fetchMenu = async () => {
+        try {
+            const response: MenuItem[] = await axiosClient.get(`/room/${roomId}/menu`);
 
-                const data = response.map((item) => ({
-                    ...item,
-                    originalDescription: item.description,
-                    originalAllergy: item.allergy,
-                }));
+            const data = response.map((item) => ({
+                ...item,
+                originalDescription: item.description,
+                originalAllergy: item.allergy,
+            }));
 
-                console.log('Menu data:', data);
+            console.log('Menu data:', data);
 
-                // 이미지 검색 추가
-                const itemsWithImages = await fetchImagesForMenuItems(data);
-                console.log(itemsWithImages);
+            // 이미지 검색 추가
+            const itemsWithImages = await fetchImagesForMenuItems(data);
+            console.log(itemsWithImages);
 
-                setMenuItems(itemsWithImages);
+            setMenuItems(itemsWithImages);
 
-                if (currentLang !== 'ko') {
-                    const translatedData = await updateDescriptions(itemsWithImages);
-                    setMenuItems(translatedData);
-                }
-            } catch (error) {
-                console.error('Failed to fetch menu:', error);
+            if (currentLang !== 'ko') {
+                const translatedData = await updateDescriptions(itemsWithImages);
+                setMenuItems(translatedData);
             }
-        };
-
-        const fetchMenuImages = async () => {
-            try {
-                // response가 배열임을 명확히 지정
-                const response: { id: number; imageUrl: string }[] = await axiosClient.get(`/room/${roomId}/image`);
-
-                const data = response.map((item) => item.imageUrl);
-                console.log('Menu images:', data);
-                setMenuImages(data);
-            } catch (error) {
-                console.error("Failed to fetch menu images:", error);
-            }
-        };
-
-        const fetchRoomInfo = async () => {
-            try {
-                const response: any = await axiosClient.get(`/room/${roomId}`);
-                const { memberList } = response;
-
-                if (Array.isArray(memberList)) {
-                    setUserInfo(memberList);
-                } else {
-                    console.error('Invalid memberList format:', memberList);
-                }
-            } catch (error) {
-                console.error('Failed to fetch room info:', error);
-            }
+        } catch (error) {
+            console.error('Failed to fetch menu:', error);
         }
+    };
 
+    const fetchMenuImages = async () => {
+        try {
+            // response가 배열임을 명확히 지정
+            const response: { id: number; imageUrl: string }[] = await axiosClient.get(`/room/${roomId}/image`);
+
+            const data = response.map((item) => item.imageUrl);
+            console.log('Menu images:', data);
+            setMenuImages(data);
+        } catch (error) {
+            console.error("Failed to fetch menu images:", error);
+        }
+    };
+
+    const fetchRoomInfo = async () => {
+        try {
+            const response: any = await axiosClient.get(`/room/${roomId}`);
+            const { memberList } = response;
+
+            if (Array.isArray(memberList)) {
+                setUserInfo(memberList);
+            } else {
+                console.error('Invalid memberList format:', memberList);
+            }
+        } catch (error) {
+            console.error('Failed to fetch room info:', error);
+        }
+    }
+
+    useEffect(() => {
         fetchMenu();
         fetchMenuImages();
         fetchRoomInfo();
@@ -308,8 +288,10 @@ const Menu: React.FC = () => {
         return updatedItems;
     };
 
-    const handleAddToCart = (item: MenuItem, isGroup: boolean) => {
-        const quantity = 1; // 현재는 1로 고정, 필요하면 UI에서 수량을 받아올 수 있음
+    const handleAddToCart = (item: MenuItem, isGroup: boolean, quantity: number) => {
+        if(!isLoggedIn) {
+            alert(t('loginToOrder'));
+        }
 
         // WebSocket 연결 상태 확인
         if (!ws.current || ws.current.readyState !== WebSocket.OPEN) {
@@ -326,6 +308,7 @@ const Menu: React.FC = () => {
         ws.current.send(message);
         console.log('Sent choice message to WebSocket:', message);
     };
+
 
     // 메뉴명을 로마자로 변환
     const getDisplayName = (name: string) => {
@@ -428,7 +411,7 @@ const Menu: React.FC = () => {
                                                 flex: 1,
                                                 boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
                                             }}
-                                            onClick={() => handleAddToCart(item, false)}
+                                            onClick={() => handleAddToCart(item, false, 1)}
                                         >
                                             {t('forMyself')}
                                         </Button>
@@ -446,7 +429,7 @@ const Menu: React.FC = () => {
                                                 flex: 1,
                                                 boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
                                             }}
-                                            onClick={() => handleAddToCart(item, true)}
+                                            onClick={() => handleAddToCart(item, true, 1)}
                                         >
                                             {t('forEveryone')}
                                         </Button>
@@ -459,7 +442,12 @@ const Menu: React.FC = () => {
 
             </Container>
 
-            <FooterWithCart cart={cart} />
+            {
+                isLoggedIn && (
+                    <FooterWithCart menu={menuItems} cart={cart} handleAddToCart={handleAddToCart} />
+                )
+            }
+
         </div>
 
     );

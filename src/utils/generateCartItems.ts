@@ -1,4 +1,4 @@
-import { CartItem, MenuItem } from "../pages/Menu";
+import {CartItem, MenuItem} from "../type/types";
 
 export const generateCartItems = (
     menuItems: MenuItem[],
@@ -19,6 +19,10 @@ export const generateCartItems = (
                 const isGroup = sessionToken === 'group';
                 const userName = isGroup ? 'Shared Group' : user.username || 'default-user-name';
                 const userId = isGroup ? 'shared-group-id' : user.id || 'default-user-id';
+
+                if(Number(quantity) === 0) {
+                    return;
+                }
 
                 // CartItem 생성 및 추가
                 cartItems.push({

@@ -5,6 +5,7 @@ i18n.use(initReactI18next).init({
     resources: {
         en: {
             translation: {
+
                 "welcome": "Globab",
                 "popular": "Popular Dishes",
                 "createRoomError": "Failed to create room. Please try again.",
@@ -23,7 +24,8 @@ i18n.use(initReactI18next).init({
                 "error": {
                     "createRoom": "Failed to create room",
                     "fetchUserInfo": "Failed to fetch user info",
-                    "loginFailed": "Google Login failed. Please try again."
+                    "loginFailed": "Google Login failed. Please try again.",
+                    "sessionExpired": "Your session has expired. Please log in again."
                 },
 
                 "description": {
@@ -83,6 +85,7 @@ i18n.use(initReactI18next).init({
                 "forEveryone": "For Everyone",
                 "sharedMenu": "Shared Menu",
                 "personalMenu": "Personal Menu",
+                "loginToOrder": "Please log in to order.",
             }
         },
         ko: {
@@ -102,6 +105,12 @@ i18n.use(initReactI18next).init({
                 "languageSelector": "언어 선택",
                 "createRoom": "방 생성",
                 "loginWithGoogle": "구글로 로그인",
+                "error": {
+                    "createRoom": "방 생성에 실패했습니다.",
+                    "fetchUserInfo": "사용자 정보를 가져오는데 실패했습니다.",
+                    "loginFailed": "구글 로그인에 실패했습니다. 다시 시도해주세요.",
+                    "sessionExpired": "세션이 만료되었습니다. 다시 로그인해주세요.",
+                },
 
                 "description": {
                     "boneGuk": "해장에 좋은 소 뼈로 만든 영양 국.",
@@ -160,6 +169,7 @@ i18n.use(initReactI18next).init({
                 "forEveryone": "공유용",
                 "sharedMenu": "공유된 메뉴",
                 "personalMenu": "개인 메뉴",
+                "loginToOrder": "주문을 위해 로그인해주세요.",
             }
         }
     },
