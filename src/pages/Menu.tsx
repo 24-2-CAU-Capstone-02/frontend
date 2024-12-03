@@ -144,6 +144,7 @@ const Menu: React.FC = () => {
 
     const fetchMenu = async () => {
         try {
+            // 메뉴 데이터 가져오기
             const response: MenuItem[] = await axiosClient.get(`/room/${roomId}/menu`);
 
             const data = response.map((item) => ({
@@ -154,12 +155,23 @@ const Menu: React.FC = () => {
 
             console.log('Menu data:', data);
 
-            // 이미지 검색 추가
+            // 음식 사진 가져오기
             const itemsWithImages = await fetchImagesForMenuItems(data);
-            console.log(itemsWithImages);
+            console.log('Menu with images:', itemsWithImages);
 
             setMenuItems(itemsWithImages);
 
+            // 메뉴 데이터와 pendingCartData를 결합하여 장바구니 데이터 생성
+            if (Object.keys(pendingCartData).length > 0 && userInfo.length > 0) {
+                const cartItems = generateCartItems(itemsWithImages, pendingCartData, userInfo);
+                console.log('Generated CartItems with images:', cartItems);
+                setCart(cartItems);
+
+                // 임시 데이터 초기화
+                setPendingCartData({});
+            }
+
+            // 다국어 처리
             if (currentLang !== 'ko') {
                 const translatedData = await updateDescriptions(itemsWithImages);
                 setMenuItems(translatedData);
@@ -215,9 +227,9 @@ const Menu: React.FC = () => {
     }, [currentLang]);
 
     useEffect(() => {
-        if (menuItems.length > 0 && Object.keys(pendingCartData).length > 0) {
+        if (menuItems.length > 0 && Object.keys(pendingCartData).length > 0 && userInfo.length > 0) {
             const cartItems = generateCartItems(menuItems, pendingCartData, userInfo);
-            console.log('Generated CartItems from pending data:', cartItems);
+            console.log('Generated CartItems:', cartItems);
             setCart(cartItems);
 
             // 임시 데이터 초기화
@@ -261,7 +273,7 @@ const Menu: React.FC = () => {
 
         const updatedItems = await Promise.all(
             items.map(async (item) => {
-                const query = encodeURIComponent(item.menuName);
+                const query = encodeURIComponent(item.menuName + '음식사진');
                 const endpoint = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${query}&searchType=image`;
 
                 try {
@@ -325,11 +337,6 @@ const Menu: React.FC = () => {
                     <IconButton color="inherit" title="Language Selector">
                         <LanguageSwitcher/>
                     </IconButton>
-                    <IconButton color="inherit">
-                        <Badge badgeContent={cart.length} color="secondary">
-                            <ShoppingCartIcon/>
-                        </Badge>
-                    </IconButton>
                 </Toolbar>
             </AppBar>
 
@@ -378,13 +385,7 @@ const Menu: React.FC = () => {
                                     >
                                         <Typography variant="h6" style={{ fontWeight: 'bold', color: '#123456' }}>
                                             {getDisplayName(item.menuName)}
-                                            {Array(item.spicyLevel)
-                                                .fill("🌶️")
-                                                .map((icon, index) => (
-                                                    <span key={index} style={{ fontSize: '16px', marginLeft: '2px' }}>
-                                        {icon}
-                                    </span>
-                                                ))}
+                                            {currentLang !== 'ko' && '('+item.menuName+')'}
                                         </Typography>
                                         <Typography variant="body1" color="textSecondary">
                                             ₩{item.price.toLocaleString()}
@@ -396,6 +397,18 @@ const Menu: React.FC = () => {
                                     <Typography variant="body2" color="textSecondary" style={{ marginBottom: '8px' }}>
                                         <strong>{t('allergy')}:</strong> {currentLang === 'ko' ? item.originalAllergy : item.allergy || t('none')}
                                     </Typography>
+                                    <Typography variant="body2" color="textSecondary" style={{ marginBottom: '8px' }}>
+                                        <strong>{t('spicy')}:</strong>
+                                        {Array(item.spicyLevel)
+                                            .fill("🌶️")
+                                            .map((icon, index) => (
+                                                <span key={index} style={{ fontSize: '16px', marginLeft: '2px' }}>
+                                                        {icon}
+                                                    </span>
+                                            ))}
+                                    </Typography>
+
+
 
                                     <Box display="flex" justifyContent="space-between" gap="8px">
                                         <Button

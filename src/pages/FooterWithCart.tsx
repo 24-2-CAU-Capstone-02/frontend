@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, {useRef, useState} from 'react';
 import { Modal, Box, Typography, Button, List, ListItem, ListItemText, Divider, Badge, IconButton } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { CartItem, MenuItem } from "../type/types";
+import { toPng } from 'html-to-image';
+import ImageIcon from "@mui/icons-material/Image";
 
 const FooterWithCart: React.FC<{
     menu: MenuItem[];
@@ -11,7 +13,9 @@ const FooterWithCart: React.FC<{
     handleAddToCart: (item: MenuItem, isGroup: boolean, quantity: number) => void;
 }> = ({ menu, cart, handleAddToCart }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const modalRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
+
 
     // 총 가격 계산 (quantity 포함)
     const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -45,6 +49,56 @@ const FooterWithCart: React.FC<{
         const menuItem = menu.find((menuItem) => menuItem.id === item.id);
         if (menuItem) {
             handleAddToCart(menuItem, item.userName === 'Shared Group', 0); // 수량을 0으로 설정
+        }
+    };
+
+    const handleExportImage = async () => {
+        if (!modalRef.current) {
+            console.error('Modal content not found!');
+            return;
+        }
+
+        try {
+            const modal = modalRef.current;
+
+            // 기존 스타일 저장
+            const originalStyle = modal.style.cssText;
+
+            // 캡처를 위해 스타일 수정
+            modal.style.maxHeight = 'none';
+            modal.style.overflow = 'visible';
+            modal.style.position = 'absolute';
+            modal.style.transform = 'none';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = `${modal.scrollWidth}px`;
+            modal.style.height = `${modal.scrollHeight}px`;
+
+            // 캡처 실행
+            const dataUrl = await toPng(modal, {
+                width: modal.scrollWidth,
+                height: modal.scrollHeight,
+                filter: (node) => {
+                    // 특정 요소 제외 (사진 Icon 버튼 포함)
+                    if (node.className && typeof node.className === 'string') {
+                        return !(
+                            node.className.includes('MuiIconButton-root')
+                        );
+                    }
+                    return true;
+                },
+            });
+
+            // 스타일 복원
+            modal.style.cssText = originalStyle;
+
+            // 다운로드 처리
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = 'modal-content.png';
+            link.click();
+        } catch (error) {
+            console.error('Failed to export image:', error);
         }
     };
 
@@ -100,39 +154,54 @@ const FooterWithCart: React.FC<{
                             },
                         }}
                     />
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#fff', whiteSpace: 'nowrap', }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#fff', whiteSpace: 'nowrap' }}>
                         {t('showCart')}
                     </Typography>
                 </Box>
 
-                {/* 오른쪽: 최종 가격 */}
                 <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#fff' }}>
                     {`₩${totalPrice.toLocaleString()}`}
                 </Typography>
             </Button>
 
             {/* Modal */}
-            <Modal
-                open={isModalOpen}
-                onClose={toggleModal}
-                aria-labelledby="cart-modal-title"
-                aria-describedby="cart-modal-description"
-            >
-                <Box
-                    sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: 400,
-                        bgcolor: 'background.paper',
-                        boxShadow: 24,
-                        p: 4,
-                        maxHeight: '80vh',
-                        overflowY: 'auto',
-                    }}
+                <Modal
+                    open={isModalOpen}
+                    onClose={toggleModal}
+                    aria-labelledby="cart-modal-title"
+                    aria-describedby="cart-modal-description"
                 >
-                    <Typography id="cart-modal-title" variant="h6" gutterBottom>
+                    <Box
+                        ref={modalRef}
+                        sx={{
+                            position: 'relative',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: 'calc(100% - 32px)',
+                            maxWidth: '400px',
+                            bgcolor: 'background.paper',
+                            boxShadow: 24,
+                            p: 3,
+                            maxHeight: '80vh',
+                            overflowY: 'auto',
+                            borderRadius: '8px',
+                            boxSizing: 'border-box',
+                        }}
+                    >
+
+                        <IconButton
+                            onClick={handleExportImage}
+                            sx={{
+                                position: 'absolute',
+                                top: 8,
+                                right: 8,
+                            }}
+                        >
+                            <ImageIcon />
+                        </IconButton>
+
+                        <Typography id="cart-modal-title" variant="h6" gutterBottom>
                         {t('selectedMenuItems')}
                     </Typography>
                     <Divider />
@@ -311,7 +380,6 @@ const FooterWithCart: React.FC<{
                         </>
                     )}
 
-                    {/* 총 가격 */}
                     <Typography variant="h6" align="right" sx={{ marginTop: '16px' }}>
                         {`${t('total')}: ₩${totalPrice.toLocaleString()}`}
                     </Typography>

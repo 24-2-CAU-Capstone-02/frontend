@@ -20,11 +20,11 @@ const CreateRoom: React.FC = () => {
 
     const handleCreateRoom = async () => {
         try {
-            if(!roomId) {
+            if (!roomId) {
                 throw new Error('Room ID is required');
             }
 
-            if(!username) {
+            if (!username) {
                 alert(t('usernameRequired'));
                 return;
             }
@@ -32,10 +32,14 @@ const CreateRoom: React.FC = () => {
             // 빈 문자열 처리
             const roomPassword = password || '';
 
-            const response = await axiosClient.post<CreateRoomMemberResponse>(`/room/${roomId}/member`, { username: username, roomPassword });
+            const response = await axiosClient.post<CreateRoomMemberResponse>(
+                `/room/${roomId}/member`,
+                { username: username, password: roomPassword }
+            );
+
             const { memberId, username: createdUsername, sessionToken } = response.data || response;
 
-            // 세션 토큰 저장 memberId, username, sesssionToken을 다 같이 저장
+            // 세션 토큰 저장 memberId, username, sessionToken을 다 같이 저장
             localStorage.setItem('roomId', roomId);
             localStorage.setItem('memberId', memberId);
             localStorage.setItem('username', username);
@@ -43,9 +47,13 @@ const CreateRoom: React.FC = () => {
 
             // 카메라 선택 화면으로 이동
             navigation(`/menu?roomId=${roomId}`);
-        } catch (error) {
-            console.error('Failed to create room:', error);
-            alert(t('createRoomError'));
+        } catch (error: any) {
+            if (error.response?.status === 401) {
+                alert(t('unauthorizedAccess'));
+            } else {
+                console.error('Failed to create room:', error);
+                alert(t('createRoomError'));
+            }
         }
     };
 

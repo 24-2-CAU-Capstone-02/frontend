@@ -17,6 +17,8 @@ i18n.use(initReactI18next).init({
                 "menuInformation": "Menu Information",
                 "shareStart": "Share",
                 "login": "Login",
+                "allergy": "Allergy",
+                "spicy": "Spicy",
 
                 "languageSelector": "Language Selector",
                 "createRoom": "Create Room",
@@ -57,6 +59,7 @@ i18n.use(initReactI18next).init({
                 "Home": "Home",
                 "Settings": "Settings",
                 "usernameRequired": "Username is required.",
+                "unauthorizedAccess": "Please check the password.",
 
                 // camera
                 "cameraSelect": "Camera Select",
@@ -141,6 +144,9 @@ i18n.use(initReactI18next).init({
                 "Home": "홈",
                 "Settings": "설정",
                 "usernameRequired": "사용자 이름을 입력해주세요.",
+                "unauthorizedAccess": "비밀번호를 확인해주세요.",
+                "allergy": "알레르기",
+                "spicy": "맵기",
 
                 // camera
                 "cameraSelect": "카메라 선택",
