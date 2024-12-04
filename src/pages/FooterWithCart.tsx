@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import { Modal, Box, Typography, Button, List, ListItem, ListItemText, Divider, Badge, IconButton } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import AddIcon from '@mui/icons-material/Add';
@@ -11,7 +11,8 @@ const FooterWithCart: React.FC<{
     menu: MenuItem[];
     cart: CartItem[];
     handleAddToCart: (item: MenuItem, isGroup: boolean, quantity: number) => void;
-}> = ({ menu, cart, handleAddToCart }) => {
+    getDisplayName: (userName: string) => string;
+}> = ({ menu, cart, handleAddToCart, getDisplayName }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
@@ -27,15 +28,15 @@ const FooterWithCart: React.FC<{
     const sharedCart = cart.filter((item) => item.userName === 'Shared Group');
     const personalCart = cart.filter((item) => item.userName !== 'Shared Group').sort((a, b) => a.userName.localeCompare(b.userName));
 
-    const handleIncreaseQuantity = (item: CartItem) => {
+    const handleIncreaseQuantity = useCallback((item: CartItem) => {
         const menuItem = menu.find((menuItem) => menuItem.id === item.id);
         if (menuItem) {
             const newQuantity = item.quantity + 1;
             handleAddToCart(menuItem, item.userName === 'Shared Group', newQuantity);
         }
-    };
+    }, [menu, handleAddToCart]);
 
-    const handleDecreaseQuantity = (item: CartItem) => {
+    const handleDecreaseQuantity = useCallback((item: CartItem) => {
         if (item.quantity > 1) {
             const menuItem = menu.find((menuItem) => menuItem.id === item.id);
             if (menuItem) {
@@ -43,14 +44,15 @@ const FooterWithCart: React.FC<{
                 handleAddToCart(menuItem, item.userName === 'Shared Group', newQuantity);
             }
         }
-    };
+    }, [menu, handleAddToCart]);
 
-    const handleRemoveItem = (item: CartItem) => {
+    const handleRemoveItem = useCallback((item: CartItem) => {
         const menuItem = menu.find((menuItem) => menuItem.id === item.id);
         if (menuItem) {
-            handleAddToCart(menuItem, item.userName === 'Shared Group', 0); // 수량을 0으로 설정
+            handleAddToCart(menuItem, item.userName === 'Shared Group', 0);
         }
-    };
+    }, [menu, handleAddToCart]);
+
 
     const handleExportImage = async () => {
         if (!modalRef.current) {
@@ -81,9 +83,7 @@ const FooterWithCart: React.FC<{
                 filter: (node) => {
                     // 특정 요소 제외 (사진 Icon 버튼 포함)
                     if (node.className && typeof node.className === 'string') {
-                        return !(
-                            node.className.includes('MuiIconButton-root')
-                        );
+                        return !node.className.includes('MuiButton-contained');
                     }
                     return true;
                 },
@@ -206,93 +206,21 @@ const FooterWithCart: React.FC<{
                     </Typography>
                     <Divider />
 
-                    {sharedCart.length > 0 && (
-                        <>
-                            <Typography variant="subtitle1" sx={{ fontWeight: 'bold', marginTop: '16px' }}>
-                                {t('sharedMenu')}
-                            </Typography>
-                            <List>
-                                {sharedCart.map((item) => (
-                                    <ListItem
-                                        key={item.id}
-                                        sx={{
-                                            padding: '8px 0',
-                                            position: 'relative',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'flex-start',
-                                        }}
-                                    >
-                                        <IconButton
-                                            size="small"
-                                            sx={{
-                                                position: 'absolute',
-                                                top: '8px',
-                                                right: '8px',
-                                                width: 24,
-                                                height: 24,
-                                                padding: '2px',
-                                                borderRadius: '50%',
-                                            }}
-                                            onClick={() => handleRemoveItem(item)}
-                                        >
-                                            ✕
-                                        </IconButton>
+                        <List>
+                            {sharedCart.map((item) => (
+                                <CartItemComponent
+                                    key={item.id}
+                                    item={item}
+                                    handleIncreaseQuantity={handleIncreaseQuantity}
+                                    handleDecreaseQuantity={handleDecreaseQuantity}
+                                    handleRemoveItem={handleRemoveItem}
+                                    getDisplayName={getDisplayName}
+                                    t={t}
+                                />
+                            ))}
+                        </List>
 
-                                        <ListItemText
-                                            primary={item.menuName}
-                                            secondary={`${t('price')}: ₩${(item.price * item.quantity).toLocaleString()}`}
-                                        />
-
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-                                            <IconButton
-                                                size="small"
-                                                sx={{
-                                                    width: 28,
-                                                    height: 28,
-                                                    padding: '2px',
-                                                    backgroundColor: '#f5f5f5',
-                                                    borderRadius: '50%',
-                                                    '&:hover': { backgroundColor: '#e0e0e0' },
-                                                }}
-                                                onClick={() => handleDecreaseQuantity(item)}
-                                                disabled={item.quantity <= 1}
-                                            >
-                                                <RemoveIcon fontSize="small" />
-                                            </IconButton>
-                                            <Typography
-                                                sx={{
-                                                    fontSize: '0.875rem',
-                                                    fontWeight: 'bold',
-                                                    minWidth: '24px',
-                                                    textAlign: 'center',
-                                                }}
-                                            >
-                                                {item.quantity}
-                                            </Typography>
-                                            <IconButton
-                                                size="small"
-                                                sx={{
-                                                    width: 28,
-                                                    height: 28,
-                                                    padding: '2px',
-                                                    backgroundColor: '#f5f5f5',
-                                                    borderRadius: '50%',
-                                                    '&:hover': { backgroundColor: '#e0e0e0' },
-                                                }}
-                                                onClick={() => handleIncreaseQuantity(item)}
-                                            >
-                                                <AddIcon fontSize="small" />
-                                            </IconButton>
-                                        </Box>
-                                    </ListItem>
-                                ))}
-                            </List>
-                            <Divider sx={{ borderStyle: 'dashed', borderWidth: '1px', borderColor: '#cccccc' }} />
-                        </>
-                    )}
-
-                    {personalCart.length > 0 && (
+                        {personalCart.length > 0 && (
                         <>
                             <Typography variant="subtitle1" sx={{ fontWeight: 'bold', marginTop: '16px' }}>
                                 {t('personalMenu')}
@@ -326,7 +254,7 @@ const FooterWithCart: React.FC<{
                                         </IconButton>
 
                                         <ListItemText
-                                            primary={item.menuName}
+                                            primary={getDisplayName(item.menuName) + '(' + item.menuName + ')'}
                                             secondary={`${t('price')}: ₩${(item.price * item.quantity).toLocaleString()}${
                                                 item.userName !== 'Shared Group' ? ` | ${t('user')}: ${item.userName}` : ''
                                             }`}
@@ -397,5 +325,82 @@ const FooterWithCart: React.FC<{
         </>
     );
 };
+
+const CartItemComponent = React.memo(({ item, handleIncreaseQuantity, handleDecreaseQuantity, handleRemoveItem, getDisplayName, t }: any) => (
+    <ListItem
+        key={item.id}
+        sx={{
+            padding: '8px 0',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+        }}
+    >
+        <IconButton
+            size="small"
+            sx={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                width: 24,
+                height: 24,
+                padding: '2px',
+                borderRadius: '50%',
+            }}
+            onClick={() => handleRemoveItem(item)}
+        >
+            ✕
+        </IconButton>
+
+        <ListItemText
+            primary={getDisplayName(item.menuName) + '(' + item.menuName + ')'}
+            secondary={`${t('price')}: ₩${(item.price * item.quantity).toLocaleString()}`}
+        />
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+            <IconButton
+                size="small"
+                sx={{
+                    width: 28,
+                    height: 28,
+                    padding: '2px',
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '50%',
+                    '&:hover': { backgroundColor: '#e0e0e0' },
+                }}
+                onClick={() => handleDecreaseQuantity(item)}
+                disabled={item.quantity <= 1}
+            >
+                <RemoveIcon fontSize="small" />
+            </IconButton>
+            <Typography
+                sx={{
+                    fontSize: '0.875rem',
+                    fontWeight: 'bold',
+                    minWidth: '24px',
+                    textAlign: 'center',
+                }}
+            >
+                {item.quantity}
+            </Typography>
+            <IconButton
+                size="small"
+                sx={{
+                    width: 28,
+                    height: 28,
+                    padding: '2px',
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '50%',
+                    '&:hover': { backgroundColor: '#e0e0e0' },
+                }}
+                onClick={() => handleIncreaseQuantity(item)}
+            >
+                <AddIcon fontSize="small" />
+            </IconButton>
+        </Box>
+    </ListItem>
+));
+
 
 export default FooterWithCart;

@@ -21,8 +21,6 @@ import {
 } from '@mui/material';
 import ShareIcon from '@mui/icons-material/Share';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import DoorFrontIcon from '@mui/icons-material/DoorFront'
 import {useTranslation} from "react-i18next";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import {getRomanizedName} from "../utils/romainz";
@@ -33,12 +31,24 @@ import {isLoggedInCheck} from "../utils/isLoggedInCheck";
 import FooterWithCart from "./FooterWithCart";
 import {generateCartItems} from "../utils/generateCartItems";
 import {CartItem, MenuItem} from "../type/types";
+import Slider from "react-slick";
+
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+
+const sliderSettings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+};
 
 const socketUrl = process.env.REACT_APP_SOCKET_URL;
 
 const Menu: React.FC = () => {
     const location = useLocation();
-    const { t, i18n } = useTranslation();
+    const {t, i18n} = useTranslation();
     const currentLang = i18n.language;
     const params = new URLSearchParams(location.search);
     const roomId = params.get('roomId');
@@ -47,8 +57,9 @@ const Menu: React.FC = () => {
     const [sessionId, setSessionId] = useState<string | null>(paramSessionId || null);
     const [userInfo, setUserInfo] = useState<any[]>([]);
     const [cart, setCart] = useState<CartItem[]>([]);
-    const [menuImages, setMenuImages] = useState<string[]>([]);
+    const [menuImages, setMenuImages] = useState<any[]>([]);
     const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+    const [groupedData, setGroupedData] = useState<any[]>([]);
     const [pendingCartData, setPendingCartData] = useState<Record<string, any>>({});
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const navigate = useNavigate();
@@ -185,10 +196,7 @@ const Menu: React.FC = () => {
         try {
             // response가 배열임을 명확히 지정
             const response: { id: number; imageUrl: string }[] = await axiosClient.get(`/room/${roomId}/image`);
-
-            const data = response.map((item) => item.imageUrl);
-            console.log('Menu images:', data);
-            setMenuImages(data);
+            setMenuImages(response);
         } catch (error) {
             console.error("Failed to fetch menu images:", error);
         }
@@ -197,7 +205,7 @@ const Menu: React.FC = () => {
     const fetchRoomInfo = async () => {
         try {
             const response: any = await axiosClient.get(`/room/${roomId}`);
-            const { memberList } = response;
+            const {memberList} = response;
 
             if (Array.isArray(memberList)) {
                 setUserInfo(memberList);
@@ -214,6 +222,30 @@ const Menu: React.FC = () => {
         fetchMenuImages();
         fetchRoomInfo();
     }, [roomId]);
+
+    // menuItems와 menuImages가 모두 준비되면 메뉴판 사진과 메뉴 정보를 그룹화
+    useEffect(() => {
+        console.log('menuImages:', menuImages);
+        console.log('menuItems:', menuItems);
+
+        if (menuItems.length > 0 && menuImages.length > 0) {
+            const groupedData = menuImages.map((image: any) => ({
+                imageUrl: image.imageUrl,
+                menu: menuItems.filter((menu) => menu.imageId === image.id),
+            }));
+
+
+            console.log('groupedData:', groupedData)
+
+            // 빈 그룹은 제외하고 설정
+            const filteredGroupedData = groupedData.filter((group) => group.menu.length > 0);
+
+            console.log('filteredGroupedData:', filteredGroupedData)
+
+            setGroupedData(filteredGroupedData);
+        }
+    }, [menuItems, menuImages]);
+
 
     useEffect(() => {
         if (currentLang !== 'ko') {
@@ -301,9 +333,16 @@ const Menu: React.FC = () => {
     };
 
     const handleAddToCart = (item: MenuItem, isGroup: boolean, quantity: number) => {
-        if(!isLoggedIn) {
+        if (!isLoggedIn) {
             alert(t('loginToOrder'));
+            return;
         }
+
+        // 기존 장바구니에서 해당 아이템의 수량 확인
+        const existingCartItem = cart.find((cartItem) => cartItem.id === item.id);
+        const currentQuantity = existingCartItem ? existingCartItem.quantity : 0;
+
+        const updatedQuantity = quantity === -1 ? currentQuantity + 1 : quantity;
 
         // WebSocket 연결 상태 확인
         if (!ws.current || ws.current.readyState !== WebSocket.OPEN) {
@@ -315,12 +354,12 @@ const Menu: React.FC = () => {
             type: 'choice',
             menuId: item.id,
             isGroup,
-            quantity,
+            quantity: updatedQuantity, // 필드명을 quantity로 고정
         });
+
         ws.current.send(message);
         console.log('Sent choice message to WebSocket:', message);
     };
-
 
     // 메뉴명을 로마자로 변환
     const getDisplayName = (name: string) => {
@@ -340,131 +379,138 @@ const Menu: React.FC = () => {
                 </Toolbar>
             </AppBar>
 
-            <Container style={{ paddingBottom: '80px' }}>
-                <Typography variant="h5" gutterBottom align="center">
-                    {t('menuInformation')}
-                </Typography>
+            <Container style={{paddingBottom: '80px'}}>
+                <Slider {...sliderSettings}>
+                    {groupedData.map((group, index) => (
+                        <Container key={index} style={{paddingBottom: '80px'}}>
+                            <Typography variant="h5" gutterBottom align="center">
+                                {t('menuInformation')}
+                            </Typography>
 
-                <img
-                    src={menuImages[0]}
-                    alt={"menu"}
-                    style={{
-                        width: '100%',
-                        height: 'auto',
-                        borderRadius: '8px',
-                        marginBottom: '16px',
-                        boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
-                    }}
-                />
-
-                <ActionButtons roomId={roomId} />
-
-                <Grid container spacing={3}>
-                    {menuItems.map((item) => (
-                        <Grid item xs={12} sm={6} md={4} key={item.id}>
-                            <Card
+                            <img
+                                src={group.imageUrl}
+                                alt={`menu-${index}`}
                                 style={{
-                                    borderRadius: '16px',
-                                    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
-                                    backgroundColor: '#fff',
+                                    width: '100%',
+                                    height: 'auto',
+                                    borderRadius: '8px',
+                                    marginBottom: '16px',
+                                    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
                                 }}
-                            >
-                                <CardMedia
-                                    component="img"
-                                    alt={item.menuName}
-                                    height="200"
-                                    image={item.imageUrl || 'default-image-url.jpg'}
-                                    style={{ borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}
-                                />
-                                <CardContent>
-                                    <Box
-                                        display="flex"
-                                        justifyContent="space-between"
-                                        alignItems="center"
-                                        style={{ marginBottom: '8px' }}
-                                    >
-                                        <Typography variant="h6" style={{ fontWeight: 'bold', color: '#123456' }}>
-                                            {getDisplayName(item.menuName)}
-                                            {currentLang !== 'ko' && '('+item.menuName+')'}
-                                        </Typography>
-                                        <Typography variant="body1" color="textSecondary">
-                                            ₩{item.price.toLocaleString()}
-                                        </Typography>
-                                    </Box>
-                                    <Typography variant="body2" color="textSecondary" style={{ marginBottom: '8px' }}>
-                                        {currentLang === 'ko' ? item.originalDescription : item.description}
-                                    </Typography>
-                                    <Typography variant="body2" color="textSecondary" style={{ marginBottom: '8px' }}>
-                                        <strong>{t('allergy')}:</strong> {currentLang === 'ko' ? item.originalAllergy : item.allergy || t('none')}
-                                    </Typography>
-                                    <Typography variant="body2" color="textSecondary" style={{ marginBottom: '8px' }}>
-                                        <strong>{t('spicy')}:</strong>
-                                        {Array(item.spicyLevel)
-                                            .fill("🌶️")
-                                            .map((icon, index) => (
-                                                <span key={index} style={{ fontSize: '16px', marginLeft: '2px' }}>
+                            />
+
+                            <ActionButtons roomId={roomId}/>
+
+                            <Grid container spacing={3}>
+                                {group.menu.map((item: any) => (
+                                    <Grid item xs={12} sm={6} md={4} key={item.id}>
+                                        <Card
+                                            style={{
+                                                borderRadius: '16px',
+                                                boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
+                                                backgroundColor: '#fff',
+                                            }}
+                                        >
+                                            <CardMedia
+                                                component="img"
+                                                alt={item.menuName}
+                                                height="200"
+                                                image={item.imageUrl || 'default-image-url.jpg'}
+                                                style={{borderTopLeftRadius: '16px', borderTopRightRadius: '16px'}}
+                                            />
+                                            <CardContent>
+                                                <Box
+                                                    display="flex"
+                                                    justifyContent="space-between"
+                                                    alignItems="center"
+                                                    style={{marginBottom: '8px'}}
+                                                >
+                                                    <Typography variant="h6"
+                                                                style={{fontWeight: 'bold', color: '#123456'}}>
+                                                        {getDisplayName(item.menuName)}
+                                                        {currentLang !== 'ko' && '(' + item.menuName + ')'}
+                                                    </Typography>
+                                                    <Typography variant="body1" color="textSecondary">
+                                                        ₩{item.price.toLocaleString()}
+                                                    </Typography>
+                                                </Box>
+                                                <Typography variant="body2" color="textSecondary"
+                                                            style={{marginBottom: '8px'}}>
+                                                    {currentLang === 'ko' ? item.originalDescription : item.description}
+                                                </Typography>
+                                                <Typography variant="body2" color="textSecondary"
+                                                            style={{marginBottom: '8px'}}>
+                                                    <strong>{t('allergy')}:</strong> {currentLang === 'ko' ? item.originalAllergy : item.allergy || t('none')}
+                                                </Typography>
+                                                <Typography variant="body2" color="textSecondary"
+                                                            style={{marginBottom: '8px'}}>
+                                                    <strong>{t('spicy')}:</strong>
+                                                    {Array(item.spicyLevel)
+                                                        .fill("🌶️")
+                                                        .map((icon, index) => (
+                                                            <span key={index}
+                                                                  style={{fontSize: '16px', marginLeft: '2px'}}>
                                                         {icon}
                                                     </span>
-                                            ))}
-                                    </Typography>
+                                                        ))}
+                                                </Typography>
 
 
+                                                <Box display="flex" justifyContent="space-between" gap="8px">
+                                                    <Button
+                                                        variant="contained"
+                                                        startIcon={<AddShoppingCartIcon/>}
+                                                        style={{
+                                                            backgroundColor: '#007bff',
+                                                            color: '#fff',
+                                                            fontWeight: 'bold',
+                                                            textTransform: 'none',
+                                                            borderRadius: '8px',
+                                                            padding: '8px 12px',
+                                                            flex: 1,
+                                                            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                                                        }}
+                                                        onClick={() => handleAddToCart(item, false, -1)}
+                                                    >
+                                                        {t('forMyself')}
+                                                    </Button>
 
-                                    <Box display="flex" justifyContent="space-between" gap="8px">
-                                        <Button
-                                            variant="contained"
-                                            startIcon={<AddShoppingCartIcon />}
-                                            style={{
-                                                backgroundColor: '#007bff',
-                                                color: '#fff',
-                                                fontWeight: 'bold',
-                                                textTransform: 'none',
-                                                borderRadius: '8px',
-                                                padding: '8px 12px',
-                                                flex: 1,
-                                                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-                                            }}
-                                            onClick={() => handleAddToCart(item, false, 1)}
-                                        >
-                                            {t('forMyself')}
-                                        </Button>
-
-                                        <Button
-                                            variant="contained"
-                                            startIcon={<ShareIcon />}
-                                            style={{
-                                                backgroundColor: '#ff6f42',
-                                                color: '#fff',
-                                                fontWeight: 'bold',
-                                                textTransform: 'none',
-                                                borderRadius: '8px',
-                                                padding: '8px 12px',
-                                                flex: 1,
-                                                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-                                            }}
-                                            onClick={() => handleAddToCart(item, true, 1)}
-                                        >
-                                            {t('forEveryone')}
-                                        </Button>
-                                    </Box>
-                                </CardContent>
-                            </Card>
-                        </Grid>
+                                                    <Button
+                                                        variant="contained"
+                                                        startIcon={<ShareIcon/>}
+                                                        style={{
+                                                            backgroundColor: '#ff6f42',
+                                                            color: '#fff',
+                                                            fontWeight: 'bold',
+                                                            textTransform: 'none',
+                                                            borderRadius: '8px',
+                                                            padding: '8px 12px',
+                                                            flex: 1,
+                                                            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                                                        }}
+                                                        onClick={() => handleAddToCart(item, true, -1)}
+                                                    >
+                                                        {t('forEveryone')}
+                                                    </Button>
+                                                </Box>
+                                            </CardContent>
+                                        </Card>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </Container>
                     ))}
-                </Grid>
-
+                </Slider>
             </Container>
 
             {
                 isLoggedIn && (
-                    <FooterWithCart menu={menuItems} cart={cart} handleAddToCart={handleAddToCart} />
+                    <FooterWithCart menu={menuItems} cart={cart} handleAddToCart={handleAddToCart} getDisplayName={getDisplayName} />
                 )
             }
 
         </div>
-
     );
-
 };
 
 export default Menu;

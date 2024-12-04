@@ -8,14 +8,11 @@ import {
     AppBar,
     Toolbar,
     IconButton,
-    BottomNavigation,
-    BottomNavigationAction,
     CircularProgress,
     Backdrop,
 } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import ImageIcon from '@mui/icons-material/Image';
-import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import axiosClient from "../utils/axiosClient";
 import { useTranslation } from 'react-i18next';
@@ -27,28 +24,23 @@ const CameraSelect: React.FC = () => {
     const roomId = params.get('roomId');
     const { t } = useTranslation();
 
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [preview, setPreview] = useState<string | null>(null);
-    const [imageText, setImageText] = useState('');
-    const [value, setValue] = useState(0);
-    const [isLoading, setIsLoading] = useState(false); // Loading 상태 추가
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [previews, setPreviews] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files.length > 0) {
-            const file = event.target.files[0];
-            setSelectedFile(file);
+            const files = Array.from(event.target.files); // 다중 파일 처리
+            setSelectedFiles(files);
 
-            // Set preview image
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
+            // 각 파일에 대한 미리 보기 생성
+            const previewUrls = files.map((file) => URL.createObjectURL(file));
+            setPreviews(previewUrls);
         }
     };
 
     const handleUpload = async () => {
-        if (!selectedFile) {
+        if (selectedFiles.length === 0) {
             alert(t('selectImageAlert'));
             return;
         }
@@ -57,7 +49,11 @@ const CameraSelect: React.FC = () => {
         try {
             const formData = new FormData();
             formData.append('roomId', roomId || '');
-            formData.append('images', selectedFile);
+
+            // 모든 파일 추가
+            selectedFiles.forEach((file) => {
+                formData.append('images', file);
+            });
 
             const response = await axiosClient.post(
                 `/room/${roomId}/upload/image`,
@@ -66,7 +62,7 @@ const CameraSelect: React.FC = () => {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },
-                    timeout: 60000, // 타임아웃을 60초(60000ms)로 설정
+                    timeout: 60000, // 타임아웃 60초 설정
                 }
             );
 
@@ -76,7 +72,7 @@ const CameraSelect: React.FC = () => {
             // 업로드 성공 후 리디렉션
             navigate(`/menu?roomId=${roomId}`);
         } catch (error) {
-            console.error('Error uploading image:', error);
+            console.error('Error uploading images:', error);
             alert(t('uploadError'));
         } finally {
             setIsLoading(false); // 로딩 종료
@@ -139,19 +135,27 @@ const CameraSelect: React.FC = () => {
                         {t('uploadMenuImage')}
                     </Typography>
 
-                    {preview ? (
+                    {previews.length > 0 ? (
                         <Box
-                            style={{
-                                width: '100%',
-                                height: '200px',
-                                backgroundImage: `url(${preview})`,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                                borderRadius: '8px',
-                                marginBottom: '16px',
-                                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                            }}
-                        />
+                            display="grid"
+                            gridTemplateColumns="repeat(auto-fill, minmax(100px, 1fr))"
+                            gap="16px"
+                            style={{ marginBottom: '16px' }}
+                        >
+                            {previews.map((preview, index) => (
+                                <Box
+                                    key={index}
+                                    style={{
+                                        width: '100px',
+                                        height: '100px',
+                                        backgroundImage: `url(${preview})`,
+                                        backgroundSize: 'cover',
+                                        backgroundPosition: 'center',
+                                        borderRadius: '8px',
+                                    }}
+                                />
+                            ))}
+                        </Box>
                     ) : (
                         <Box
                             style={{
@@ -174,6 +178,7 @@ const CameraSelect: React.FC = () => {
                         type="file"
                         accept="image/*"
                         id="file-upload"
+                        multiple // 다중 파일 선택
                         onChange={handleFileChange}
                         style={{ display: 'none' }}
                     />
@@ -189,7 +194,7 @@ const CameraSelect: React.FC = () => {
                             }}
                             startIcon={<CloudUploadIcon />}
                         >
-                            {t('chooseFile')}
+                            {t('chooseFiles')}
                         </Button>
                     </label>
 
@@ -197,7 +202,7 @@ const CameraSelect: React.FC = () => {
                         variant="contained"
                         color="primary"
                         onClick={handleUpload}
-                        disabled={!selectedFile || isLoading} // 로딩 중이면 비활성화
+                        disabled={selectedFiles.length === 0 || isLoading}
                         style={{
                             padding: '12px 24px',
                             borderRadius: '8px',
