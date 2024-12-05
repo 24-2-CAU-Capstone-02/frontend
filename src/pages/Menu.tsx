@@ -26,6 +26,7 @@ import {isLoggedInCheck} from "../utils/isLoggedInCheck";
 import FooterWithCart from "./FooterWithCart";
 import {generateCartItems} from "../utils/generateCartItems";
 import {CartItem, MenuItem} from "../type/types";
+import defaultImage from '../assets/default-image.webp';
 import Slider from "react-slick";
 
 import "slick-carousel/slick/slick.css";
@@ -294,7 +295,6 @@ const Menu: React.FC = () => {
         if (!response.items) return [];
         return response.items.map((item: any) => item.link);
     };
-
     const fetchImagesForMenuItems = async (items: MenuItem[]): Promise<MenuItem[]> => {
         try {
             // 메뉴별로 요청을 보낼 Promise 생성
@@ -303,11 +303,16 @@ const Menu: React.FC = () => {
                     try {
                         // POST 요청으로 메뉴 이미지 가져오기
                         const response: any = await axiosClient.post('/menu/image', {
-                            menuName: item.menuName,
+                            menuName: item.generalizedName,
                         });
 
                         // 응답에서 imageUrl 가져오기
-                        const imageUrl = response.imageUrl || '';
+                        let imageUrl = response.imageUrl || '';
+
+                        // imageUrl이 https로 시작하면 http로 변경
+                        if (imageUrl.startsWith('https://')) {
+                            imageUrl = imageUrl.replace('https://', 'http://');
+                        }
 
                         console.log('Fetched image for', item.menuName, ':', imageUrl);
 
@@ -319,7 +324,7 @@ const Menu: React.FC = () => {
                         console.error(`Error fetching image for ${item.menuName}:`, error);
                         return {
                             ...item,
-                            imageUrl: '', // 실패 시 기본값
+                            imageUrl: '',
                         };
                     }
                 })
@@ -330,7 +335,7 @@ const Menu: React.FC = () => {
             console.error('Failed to fetch images for menu items:', error);
             return items.map((item) => ({
                 ...item,
-                imageUrl: '', // 전체 요청 실패 시 기본값
+                imageUrl: '',
             }));
         }
     };
@@ -418,8 +423,13 @@ const Menu: React.FC = () => {
                                                 component="img"
                                                 alt={item.menuName}
                                                 height="200"
-                                                image={item.imageUrl || 'default-image-url.jpg'}
-                                                style={{borderTopLeftRadius: '16px', borderTopRightRadius: '16px'}}
+                                                image={item.imageUrl || defaultImage} // 기본 이미지를 초기값으로 사용
+                                                onError={(e) => {
+                                                    const target = e.target as HTMLImageElement;
+                                                    target.onerror = null; // 무한 루프 방지
+                                                    target.src = defaultImage; // 이미지 로드 실패 시 기본 이미지로 대체
+                                                }}
+                                                style={{ borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}
                                             />
                                             <CardContent>
                                                 <Box
