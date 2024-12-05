@@ -108,6 +108,187 @@ i18n.use(initReactI18next).init({
                 }
             }
         },
+        ja: {
+            translation: {
+                "welcome": "ようこそ",
+                "popular": "人気メニュー",
+                "createRoomError": "ルームの作成に失敗しました。再試行してください。",
+                "captureMenu": "メニューを撮影",
+                "boneGuk": "骨スープ",
+                "spicyPork": "辛い豚炒め",
+                "gamjatang": "カムジャタン（豚骨スープ）",
+                "jeyukbokkeum": "ジェユクポックム（辛い豚炒め）",
+                "menuInformation": "メニュー情報",
+                "shareStart": "共有する",
+                "login": "ログイン",
+                "languageSelector": "言語選択",
+                "createRoom": "ルームを作成",
+                "loginWithGoogle": "Googleでログイン",
+                "error": {
+                    "createRoom": "ルームの作成に失敗しました。",
+                    "fetchUserInfo": "ユーザー情報の取得に失敗しました。",
+                    "loginFailed": "Googleログインに失敗しました。再試行してください。",
+                    "sessionExpired": "セッションが期限切れです。再度ログインしてください。",
+                },
+                "description": {
+                    "boneGuk": "牛骨で作られた滋養スープ。二日酔いに最適。",
+                    "spicyPork": "ご飯と一緒に楽しむ辛い豚炒め。",
+                    "gamjatang": "ジャガイモと野菜が入った辛い韓国の豚骨スープ。",
+                    "jeyukbokkeum": "辛い豚炒め料理。蒸しご飯と一緒に提供されます。",
+                },
+                "analysis": {
+                    "boneGuk": "濃厚で風味豊か。快適な食事に最適です。",
+                    "spicyPork": "辛さは中程度で、多くの人に適しています。",
+                    "gamjatang": "豚骨の深い風味が特徴のボリューム満点で辛いスープ。",
+                    "jeyukbokkeum": "甘さと辛さが調和した中辛料理。",
+                },
+                "nutrition": {
+                    "calories": "カロリー",
+                    "carbohydrate": "炭水化物",
+                    "protein": "タンパク質",
+                    "fat": "脂肪",
+                },
+                "cameraSelect": "カメラを選択",
+                "uploadMenuImage": "メニュー画像をアップロード",
+                "chooseFile": "ファイルを選択",
+                "upload": "アップロード",
+                "selectImageAlert": "画像を選択してください。",
+                "uploadSuccess": "画像が正常にアップロードされました！",
+                "uploadError": "画像のアップロードに失敗しました。",
+                "home": "ホーム",
+                "settings": "設定",
+                "spicyAndAllergyWarning": "辛さやアレルギー情報は店舗ごとに異なる場合があります。店舗に確認してください。",
+            }
+        },
+        zh: {
+            translation: {
+                "welcome": "欢迎",
+                "popular": "热门菜品",
+                "createRoomError": "创建房间失败，请重试。",
+                "captureMenu": "拍摄菜单",
+                "boneGuk": "牛骨汤",
+                "spicyPork": "辣炒猪肉",
+                "gamjatang": "辣猪骨汤",
+                "jeyukbokkeum": "辣炒猪肉",
+                "menuInformation": "菜单信息",
+                "shareStart": "分享",
+                "login": "登录",
+                "languageSelector": "语言选择",
+                "createRoom": "创建房间",
+                "loginWithGoogle": "用 Google 登录",
+                "error": {
+                    "createRoom": "创建房间失败",
+                    "fetchUserInfo": "获取用户信息失败",
+                    "loginFailed": "Google 登录失败，请重试。",
+                    "sessionExpired": "会话已过期，请重新登录。",
+                },
+                "description": {
+                    "boneGuk": "用牛骨熬制的滋补汤，非常适合解酒。",
+                    "spicyPork": "适合搭配米饭的辣炒猪肉。",
+                    "gamjatang": "包含土豆和蔬菜的韩式辣猪骨汤。",
+                    "jeyukbokkeum": "辛辣的猪肉炒菜，配蒸米饭食用。",
+                },
+                "analysis": {
+                    "boneGuk": "浓郁香醇，适合作为舒适食品。",
+                    "spicyPork": "中等辣度，适合大多数人。",
+                    "gamjatang": "味道浓郁辛辣，猪骨香味十足。",
+                    "jeyukbokkeum": "中辣，甜味和咸味平衡。",
+                },
+                "nutrition": {
+                    "calories": "卡路里",
+                    "carbohydrate": "碳水化合物",
+                    "protein": "蛋白质",
+                    "fat": "脂肪",
+                },
+                "spicyAndAllergyWarning": "辣味和过敏信息因餐厅而异，请与餐厅确认。",
+            }
+        },
+        es: {
+            translation: {
+                "welcome": "Bienvenido",
+                "popular": "Platos populares",
+                "createRoomError": "Error al crear la sala. Por favor, inténtelo de nuevo.",
+                "captureMenu": "Capturar menú",
+                "boneGuk": "Sopa de hueso",
+                "spicyPork": "Cerdo picante",
+                "gamjatang": "Gamjatang (Sopa picante de hueso de cerdo)",
+                "jeyukbokkeum": "Jeyuk Bokkeum (Salteado de cerdo picante)",
+                "menuInformation": "Información del menú",
+                "shareStart": "Compartir",
+                "login": "Iniciar sesión",
+                "languageSelector": "Selector de idioma",
+                "createRoom": "Crear sala",
+                "loginWithGoogle": "Iniciar sesión con Google",
+                "error": {
+                    "createRoom": "Error al crear la sala",
+                    "fetchUserInfo": "Error al obtener información del usuario",
+                    "loginFailed": "Fallo al iniciar sesión con Google. Por favor, inténtelo de nuevo.",
+                    "sessionExpired": "Su sesión ha expirado. Por favor, inicie sesión de nuevo.",
+                },
+                "description": {
+                    "boneGuk": "Una sopa nutritiva hecha con huesos de res, perfecta para la resaca.",
+                    "spicyPork": "Un plato de cerdo salteado picante, perfecto para disfrutar con arroz.",
+                    "gamjatang": "Sopa picante coreana de hueso de cerdo con papas y verduras.",
+                    "jeyukbokkeum": "Plato de cerdo salteado picante, servido con arroz al vapor.",
+                },
+                "analysis": {
+                    "boneGuk": "Rico y sabroso, con un toque picante; ideal como comida reconfortante.",
+                    "spicyPork": "Nivel de picante moderado, adecuado para la mayoría de los consumidores.",
+                    "gamjatang": "Fuerte y picante, con un sabor intenso de los huesos de cerdo.",
+                    "jeyukbokkeum": "Picante moderado, equilibrado con sabores dulces y salados.",
+                },
+                "nutrition": {
+                    "calories": "Calorías",
+                    "carbohydrate": "Carbohidratos",
+                    "protein": "Proteínas",
+                    "fat": "Grasas",
+                },
+                "spicyAndAllergyWarning": "La información sobre picante y alérgenos puede variar según el restaurante. Por favor, confirme con el restaurante.",
+            }
+        },
+        fr: {
+            translation: {
+                "welcome": "Bienvenue",
+                "popular": "Plats populaires",
+                "createRoomError": "Échec de la création de la salle. Veuillez réessayer.",
+                "captureMenu": "Capturer le menu",
+                "boneGuk": "Soupe d'os",
+                "spicyPork": "Porc épicé",
+                "gamjatang": "Gamjatang (Soupe d'os de porc épicée)",
+                "jeyukbokkeum": "Jeyuk Bokkeum (Porc épicé sauté)",
+                "menuInformation": "Informations sur le menu",
+                "shareStart": "Partager",
+                "login": "Se connecter",
+                "languageSelector": "Sélecteur de langue",
+                "createRoom": "Créer une salle",
+                "loginWithGoogle": "Se connecter avec Google",
+                "error": {
+                    "createRoom": "Échec de la création de la salle",
+                    "fetchUserInfo": "Échec de la récupération des informations utilisateur",
+                    "loginFailed": "Échec de la connexion avec Google. Veuillez réessayer.",
+                    "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter.",
+                },
+                "description": {
+                    "boneGuk": "Une soupe nourrissante à base d'os de bœuf, parfaite pour la gueule de bois.",
+                    "spicyPork": "Un plat de porc sauté épicé, parfait à savourer avec du riz.",
+                    "gamjatang": "Soupe coréenne épicée à base d'os de porc avec des pommes de terre et des légumes.",
+                    "jeyukbokkeum": "Un plat de porc sauté épicé, servi avec du riz vapeur.",
+                },
+                "analysis": {
+                    "boneGuk": "Riche et savoureux, avec une touche épicée ; idéal pour un repas réconfortant.",
+                    "spicyPork": "Niveau d'épice modéré, adapté à la plupart des consommateurs.",
+                    "gamjatang": "Copieux et épicé, avec une forte saveur des os de porc.",
+                    "jeyukbokkeum": "Épicé modéré, équilibré avec des saveurs sucrées et salées.",
+                },
+                "nutrition": {
+                    "calories": "Calories",
+                    "carbohydrate": "Glucides",
+                    "protein": "Protéines",
+                    "fat": "Lipides",
+                },
+                "spicyAndAllergyWarning": "Les informations sur les épices et les allergies peuvent varier selon le restaurant. Veuillez vérifier auprès du restaurant.",
+            }
+        },
         ko: {
             translation: {
                 "welcome": "Globob",
@@ -210,7 +391,6 @@ i18n.use(initReactI18next).init({
                 "actions": {
                     "close": "닫기"
                 }
-
             }
         }
     },

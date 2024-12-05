@@ -17,6 +17,7 @@ const FooterWithCart: React.FC<{
     const modalRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation();
 
+    const userName = localStorage.getItem('username') || '';
 
     // 총 가격 계산 (quantity 포함)
     const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -256,21 +257,24 @@ const FooterWithCart: React.FC<{
                                             alignItems: 'flex-start',
                                         }}
                                     >
-                                        <IconButton
-                                            size="small"
-                                            sx={{
-                                                position: 'absolute',
-                                                top: '8px',
-                                                right: '8px',
-                                                width: 22,
-                                                height: 22,
-                                                padding: '2px',
-                                                borderRadius: '50%',
-                                            }}
-                                            onClick={() => handleRemoveItem(item)}
-                                        >
-                                            ✕
-                                        </IconButton>
+
+                                        {userName === item.userName && (
+                                            <IconButton
+                                                size="small"
+                                                sx={{
+                                                    position: 'absolute',
+                                                    top: '8px',
+                                                    right: '8px',
+                                                    width: 24,
+                                                    height: 24,
+                                                    padding: '2px',
+                                                    borderRadius: '50%',
+                                                }}
+                                                onClick={() => handleRemoveItem(item)}
+                                            >
+                                                ✕
+                                            </IconButton>
+                                        )}
 
                                         <ListItemText
                                             primary={getDisplayName(item.menuName) + '(' + item.menuName + ')'}
@@ -281,47 +285,51 @@ const FooterWithCart: React.FC<{
                                             sx={{ fontSize: '14px' }}
                                         />
 
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
-                                            <IconButton
-                                                size="small"
-                                                sx={{
-                                                    width: 28,
-                                                    height: 28,
-                                                    padding: '2px',
-                                                    backgroundColor: '#f5f5f5',
-                                                    borderRadius: '50%',
-                                                    '&:hover': { backgroundColor: '#e0e0e0' },
-                                                }}
-                                                onClick={() => handleDecreaseQuantity(item)}
-                                                disabled={item.quantity <= 1}
-                                            >
-                                                <RemoveIcon fontSize="small" />
-                                            </IconButton>
-                                            <Typography
-                                                sx={{
-                                                    fontSize: '0.875rem',
-                                                    fontWeight: 'bold',
-                                                    minWidth: '24px',
-                                                    textAlign: 'center',
-                                                }}
-                                            >
-                                                {item.quantity}
-                                            </Typography>
-                                            <IconButton
-                                                size="small"
-                                                sx={{
-                                                    width: 28,
-                                                    height: 28,
-                                                    padding: '2px',
-                                                    backgroundColor: '#f5f5f5',
-                                                    borderRadius: '50%',
-                                                    '&:hover': { backgroundColor: '#e0e0e0' },
-                                                }}
-                                                onClick={() => handleIncreaseQuantity(item)}
-                                            >
-                                                <AddIcon fontSize="small" />
-                                            </IconButton>
-                                        </Box>
+                                        {
+                                            userName === item.userName && (
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+                                                    <IconButton
+                                                        size="small"
+                                                        sx={{
+                                                            width: 28,
+                                                            height: 28,
+                                                            padding: '2px',
+                                                            backgroundColor: '#f5f5f5',
+                                                            borderRadius: '50%',
+                                                            '&:hover': { backgroundColor: '#e0e0e0' },
+                                                        }}
+                                                        onClick={() => handleDecreaseQuantity(item)}
+                                                        disabled={item.quantity <= 1}
+                                                    >
+                                                        <RemoveIcon fontSize="small" />
+                                                    </IconButton>
+                                                    <Typography
+                                                        sx={{
+                                                            fontSize: '0.875rem',
+                                                            fontWeight: 'bold',
+                                                            minWidth: '24px',
+                                                            textAlign: 'center',
+                                                        }}
+                                                    >
+                                                        {item.quantity}
+                                                    </Typography>
+                                                    <IconButton
+                                                        size="small"
+                                                        sx={{
+                                                            width: 28,
+                                                            height: 28,
+                                                            padding: '2px',
+                                                            backgroundColor: '#f5f5f5',
+                                                            borderRadius: '50%',
+                                                            '&:hover': { backgroundColor: '#e0e0e0' },
+                                                        }}
+                                                        onClick={() => handleIncreaseQuantity(item)}
+                                                    >
+                                                        <AddIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Box>
+                                            )
+                                        }
                                     </ListItem>
                                 ))}
                             </List>
