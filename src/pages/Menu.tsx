@@ -296,36 +296,43 @@ const Menu: React.FC = () => {
     };
 
     const fetchImagesForMenuItems = async (items: MenuItem[]): Promise<MenuItem[]> => {
-        const apiKey = process.env.REACT_APP_GOOGLE_API_KEY;
-        const searchEngineId = process.env.REACT_APP_GOOGLE_SEARCH_ENGINE_ID;
+        try {
+            // 메뉴별로 요청을 보낼 Promise 생성
+            const updatedItems = await Promise.all(
+                items.map(async (item) => {
+                    try {
+                        // POST 요청으로 메뉴 이미지 가져오기
+                        const response: any = await axiosClient.post('/menu/image', {
+                            menuName: item.menuName,
+                        });
 
-        const updatedItems = await Promise.all(
-            items.map(async (item) => {
-                const query = encodeURIComponent(item.generalizedName + '음식사진');
-                const endpoint = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${query}&searchType=image`;
+                        // 응답에서 imageUrl 가져오기
+                        const imageUrl = response.imageUrl || '';
 
-                try {
-                    const response = await fetch(endpoint);
-                    const data = await response.json();
+                        console.log('Fetched image for', item.menuName, ':', imageUrl);
 
-                    const imageUrls = extractImageUrls(data);
-                    const imageUrl = imageUrls[0] || '';
+                        return {
+                            ...item,
+                            imageUrl,
+                        };
+                    } catch (error) {
+                        console.error(`Error fetching image for ${item.menuName}:`, error);
+                        return {
+                            ...item,
+                            imageUrl: '', // 실패 시 기본값
+                        };
+                    }
+                })
+            );
 
-                    return {
-                        ...item,
-                        imageUrl,
-                    };
-                } catch (error) {
-                    console.error(`Failed to fetch image for ${item.generalizedName}:`, error);
-                    return {
-                        ...item,
-                        imageUrl: '',
-                    };
-                }
-            })
-        );
-
-        return updatedItems;
+            return updatedItems;
+        } catch (error) {
+            console.error('Failed to fetch images for menu items:', error);
+            return items.map((item) => ({
+                ...item,
+                imageUrl: '', // 전체 요청 실패 시 기본값
+            }));
+        }
     };
 
     const handleAddToCart = (item: MenuItem, isGroup: boolean, quantity: number) => {
