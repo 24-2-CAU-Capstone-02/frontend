@@ -92,15 +92,32 @@ const FooterWithCart: React.FC<{
             // 스타일 복원
             modal.style.cssText = originalStyle;
 
-            // 다운로드 처리
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            link.download = 'modal-content.png';
-            link.click();
+            // 공유하기 기능
+            if (navigator.share) {
+                const blob = await (await fetch(dataUrl)).blob();
+                const file = new File([blob], 'cart-content.png', { type: blob.type });
+
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Cart Content',
+                        text: 'Check out the items in my cart!',
+                    });
+                } catch (error) {
+                    console.error('Sharing failed', error);
+                }
+            } else {
+                // 공유 API를 지원하지 않을 경우 fallback (이미지 다운로드 제공)
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = 'cart-content.png';
+                link.click();
+            }
         } catch (error) {
-            console.error('Failed to export image:', error);
+            console.error('Failed to export and share image:', error);
         }
     };
+
 
     return (
         <>
@@ -116,7 +133,7 @@ const FooterWithCart: React.FC<{
                     maxWidth: '100%',
                     boxSizing: 'border-box',
                     backgroundColor: '#606070',
-                    padding: '16px',
+                    padding: '16px 20px',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
@@ -124,7 +141,7 @@ const FooterWithCart: React.FC<{
                     color: '#fff',
                     textTransform: 'none',
                     borderRadius: '0',
-                    height: '56px',
+                    height: '40px',
                 }}
             >
                 <Box
@@ -155,12 +172,12 @@ const FooterWithCart: React.FC<{
                             },
                         }}
                     />
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#fff', whiteSpace: 'nowrap' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#fff', whiteSpace: 'nowrap', fontSize: '16px' }}>
                         {t('showCart')}
                     </Typography>
                 </Box>
 
-                <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#fff' }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#fff', fontSize: '16px' }}>
                     {`₩${totalPrice.toLocaleString()}`}
                 </Typography>
             </Button>
@@ -203,9 +220,9 @@ const FooterWithCart: React.FC<{
                         </IconButton>
 
 
-                        <Typography id="cart-modal-title" variant="h6" gutterBottom>
-                        {t('selectedMenuItems')}
-                    </Typography>
+                        <Typography id="cart-modal-title" variant="h6" sx={{  fontSize: '18px' }} gutterBottom>
+                            {t('selectedMenuItems')}
+                        </Typography>
                     <Divider />
 
                         <List>
@@ -245,8 +262,8 @@ const FooterWithCart: React.FC<{
                                                 position: 'absolute',
                                                 top: '8px',
                                                 right: '8px',
-                                                width: 24,
-                                                height: 24,
+                                                width: 22,
+                                                height: 22,
                                                 padding: '2px',
                                                 borderRadius: '50%',
                                             }}
@@ -260,6 +277,8 @@ const FooterWithCart: React.FC<{
                                             secondary={`${t('price')}: ₩${(item.price * item.quantity).toLocaleString()}${
                                                 item.userName !== 'Shared Group' ? ` | ${t('user')}: ${item.userName}` : ''
                                             }`}
+
+                                            sx={{ fontSize: '14px' }}
                                         />
 
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
@@ -310,7 +329,7 @@ const FooterWithCart: React.FC<{
                         </>
                     )}
 
-                    <Typography variant="h6" align="right" sx={{ marginTop: '16px' }}>
+                    <Typography variant="h6" align="right" sx={{ marginTop: '16px', fontSize: '18px' }}>
                         {`${t('total')}: ₩${totalPrice.toLocaleString()}`}
                     </Typography>
                     <Button
@@ -318,7 +337,7 @@ const FooterWithCart: React.FC<{
                         color="error"
                         fullWidth
                         onClick={toggleModal}
-                        sx={{ marginTop: '16px', borderRadius: '50px' }}
+                        sx={{ marginTop: '16px', borderRadius: '50px', fontSize: '14px' }}
                     >
                         {t('close')}
                     </Button>

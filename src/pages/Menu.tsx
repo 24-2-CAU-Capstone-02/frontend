@@ -10,11 +10,6 @@ import {
     CardMedia,
     Grid,
     Button,
-    List,
-    ListItem,
-    ListItemText,
-    Divider,
-    Paper,
     IconButton,
     Badge,
     Box,
@@ -37,8 +32,8 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 const sliderSettings = {
-    dots: true,
-    infinite: true,
+    dots: false,
+    infinite: false,
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
@@ -235,7 +230,8 @@ const Menu: React.FC = () => {
             }));
 
 
-            console.log('groupedData:', groupedData)
+            console.log('groupedData:', groupedData);
+            console.log('groupedData length:', groupedData.length);
 
             // 빈 그룹은 제외하고 설정
             const filteredGroupedData = groupedData.filter((group) => group.menu.length > 0);
@@ -379,10 +375,10 @@ const Menu: React.FC = () => {
                 </Toolbar>
             </AppBar>
 
-            <Container style={{paddingBottom: '80px'}}>
+            <Container style={{paddingBottom: '50px', padding: '0'}}>
                 <Slider {...sliderSettings}>
                     {groupedData.map((group, index) => (
-                        <Container key={index}>
+                        <Container key={`group-${index}`}>
                             <Typography variant="h5" gutterBottom align="center">
                                 {t('menuInformation')}
                             </Typography>
@@ -426,7 +422,7 @@ const Menu: React.FC = () => {
                                                     style={{marginBottom: '8px'}}
                                                 >
                                                     <Typography variant="h6"
-                                                                style={{fontWeight: 'bold', color: '#123456'}}>
+                                                                style={{fontWeight: 'bold', color: '#123456', fontSize: '16px'}}>
                                                         {getDisplayName(item.menuName)}
                                                         {currentLang !== 'ko' && '(' + item.menuName + ')'}
                                                     </Typography>
@@ -469,6 +465,7 @@ const Menu: React.FC = () => {
                                                             padding: '8px 12px',
                                                             flex: 1,
                                                             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                                                            fontSize: '13px',
                                                         }}
                                                         onClick={() => handleAddToCart(item, false, -1)}
                                                     >
@@ -487,6 +484,7 @@ const Menu: React.FC = () => {
                                                             padding: '8px 12px',
                                                             flex: 1,
                                                             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                                                            fontSize: '13px',
                                                         }}
                                                         onClick={() => handleAddToCart(item, true, -1)}
                                                     >
@@ -499,7 +497,7 @@ const Menu: React.FC = () => {
                                 ))}
                             </Grid>
 
-                            <Typography variant="body2" color="textSecondary" style={{padding: '16px'}}>
+                            <Typography variant="body2" color="textSecondary" style={{padding: '10px', fontSize: '12px'}}>
                                 {t('spicyAndAllergyWarning')}
                             </Typography>
                         </Container>

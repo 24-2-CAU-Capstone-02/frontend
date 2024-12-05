@@ -6,3 +6,10 @@ body {
     height: 100vh; /* 전체 높이를 사용하도록 설정 */
     background-color: #f9f9f9; /* 배경색 설정 */
 }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    width: 100%;
+}
