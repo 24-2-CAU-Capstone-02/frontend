@@ -295,19 +295,26 @@ const Menu: React.FC = () => {
         if (!response.items) return [];
         return response.items.map((item: any) => item.link);
     };
+
     const fetchImagesForMenuItems = async (items: MenuItem[]): Promise<MenuItem[]> => {
+        const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+        const maxRetries = 3;
+        const retryDelay = 300;
+
         try {
-            // 메뉴별로 요청을 보낼 Promise 생성
-            const updatedItems = await Promise.all(
-                items.map(async (item) => {
+            const updatedItems: MenuItem[] = [];
+
+            for (const item of items) {
+                let imageUrl = '';
+                let attempt = 0;
+
+                while (attempt < maxRetries) {
                     try {
-                        // POST 요청으로 메뉴 이미지 가져오기
                         const response: any = await axiosClient.post('/menu/image', {
                             menuName: item.generalizedName,
                         });
 
-                        // 응답에서 imageUrl 가져오기
-                        let imageUrl = response.imageUrl || '';
+                        imageUrl = response.imageUrl || '';
 
                         // imageUrl이 https로 시작하면 http로 변경
                         if (imageUrl.startsWith('https://')) {
@@ -316,19 +323,28 @@ const Menu: React.FC = () => {
 
                         console.log('Fetched image for', item.menuName, ':', imageUrl);
 
-                        return {
-                            ...item,
-                            imageUrl,
-                        };
+                        break;
                     } catch (error) {
-                        console.error(`Error fetching image for ${item.menuName}:`, error);
-                        return {
-                            ...item,
-                            imageUrl: '',
-                        };
+                        attempt++;
+                        console.error(
+                            `Attempt ${attempt} failed for ${item.menuName}:`,
+                            error
+                        );
+
+                        if (attempt < maxRetries) {
+                            console.log(`Retrying after ${retryDelay}ms...`);
+                            await delay(retryDelay);
+                        } else {
+                            console.error(`Max retries reached for ${item.menuName}.`);
+                        }
                     }
-                })
-            );
+                }
+
+                updatedItems.push({
+                    ...item,
+                    imageUrl: imageUrl || '', // 요청 실패 시 기본값
+                });
+            }
 
             return updatedItems;
         } catch (error) {
