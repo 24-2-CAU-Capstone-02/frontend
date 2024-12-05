@@ -48,7 +48,7 @@ const RoomPage: React.FC = () => {
 
     return (
         <div style={{ padding: '16px', minHeight: '100vh' }}>
-            <AppBar position="static" style={{ backgroundColor: '#4caf50' }}>
+            <AppBar position="static" style={{ backgroundColor: '#c62828' }}>
                 <Toolbar>
                     <Typography variant="h6" style={{ flexGrow: 1 }}>
                         {t(step === 1 ? 'createRoom' : 'uploadMenu')}

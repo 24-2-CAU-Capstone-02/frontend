@@ -145,53 +145,6 @@ const CreateRoom: React.FC = () => {
                     </Button>
                 </Paper>
             </Box>
-
-            {/* 하단 네비게이션 */}
-            <BottomNavigation
-                value={value}
-                onChange={(event, newValue) => setValue(newValue)}
-                style={{
-                    position: 'sticky',
-                    bottom: 0,
-                    backgroundColor: '#ffffff',
-                    borderTop: '1px solid #e0e0e0',
-                }}
-            >
-                <BottomNavigationAction
-                    label={t('Home')}
-                    onClick={() => navigation('/')}
-                    style={{ color: 'inherit' }}
-                />
-                <Button
-                    variant="contained"
-                    onClick={() => navigation('/menu')}
-                    style={{
-                        position: 'absolute',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        zIndex: 1,
-                        marginBottom: '12px',
-                        borderRadius: '50%',
-                        width: '56px',
-                        height: '56px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: '#4caf50',
-                        color: 'white',
-                        boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-                    }}
-                >
-                    <CameraAltIcon style={{ fontSize: '36px' }} />
-                </Button>
-
-                <BottomNavigationAction
-                    label={t('Settings')}
-                    style={{ color: value === 2 ? '#4caf50' : 'gray' }}
-                    onClick={() => setValue(2)}
-                    disabled={true}
-                />
-            </BottomNavigation>
         </div>
     );
 };

@@ -364,7 +364,7 @@ const Menu: React.FC = () => {
 
     return (
         <div className="menu-container">
-            <AppBar position="static" style={{backgroundColor: '#4caf50', marginBottom: '16px'}}>
+            <AppBar position="static" style={{backgroundColor: '#c62828', marginBottom: '16px'}}>
                 <Toolbar>
                     <Typography variant="h6" style={{flexGrow: 1}} onClick={() => navigate('/')}>
                         {t('welcome')}

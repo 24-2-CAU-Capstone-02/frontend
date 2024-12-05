@@ -6,7 +6,7 @@ i18n.use(initReactI18next).init({
         en: {
             translation: {
 
-                "welcome": "Globab",
+                "welcome": "Globob",
                 "popular": "Popular Dishes",
                 "createRoomError": "Failed to create room. Please try again.",
                 "captureMenu": "Capture Menu",
@@ -90,11 +90,27 @@ i18n.use(initReactI18next).init({
                 "personalMenu": "Personal Menu",
                 "loginToOrder": "Please log in to order.",
                 "spicyAndAllergyWarning": "Spiciness and allergy information may vary by restaurant. Please double-check with the restaurant.",
+
+                // language switcher
+                "languageSwitcher": {
+                    "selectLanguage": "Select Language"
+                },
+                "languages": {
+                    "english": "English",
+                    "korean": "Korean",
+                    "spanish": "Spanish",
+                    "french": "French",
+                    "japanese": "Japanese",
+                    "chinese": "Chinese"
+                },
+                "actions": {
+                    "close": "Close"
+                }
             }
         },
         ko: {
             translation: {
-                "welcome": "Globab",
+                "welcome": "Globob",
                 "popular": "인기 메뉴",
                 "createRoomError": "방 생성에 실패했습니다. 다시 시도해주세요.",
                 "captureMenu": "메뉴 촬영",
@@ -178,6 +194,23 @@ i18n.use(initReactI18next).init({
                 "personalMenu": "개인 메뉴",
                 "loginToOrder": "주문을 위해 로그인해주세요.",
                 "spicyAndAllergyWarning": "맵기와 알레르기 정보는 음식점마다 다를 수 있습니다. 음식점에 문의해주세요.",
+
+                // language
+                "languageSwitcher": {
+                    "selectLanguage": "언어 선택"
+                },
+                "languages": {
+                    "english": "영어",
+                    "korean": "한국어",
+                    "spanish": "스페인어",
+                    "french": "프랑스어",
+                    "japanese": "일본어",
+                    "chinese": "중국어"
+                },
+                "actions": {
+                    "close": "닫기"
+                }
+
             }
         }
     },

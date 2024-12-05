@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import axiosClient from '../../utils/axiosClient';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import { ReactComponent as GoogleIcon } from '../../assets/google-icon.svg';
+import logo from '../../assets/logo.png';
 
 const redirect_uri = process.env.REACT_APP_REDIRECT_URI || "http://localhost:3000";
 
@@ -89,7 +90,7 @@ const Home: React.FC = () => {
     return (
         <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
             {/* Header */}
-            <AppBar position="static" sx={{ backgroundColor: '#4caf50' }}>
+            <AppBar position="static" sx={{ backgroundColor: '#c62828' }}>
                 <Toolbar>
                     <Typography variant="h6" sx={{ flexGrow: 1 }} onClick={() => navigate('/')}>
                         {t('welcome')}
@@ -105,73 +106,93 @@ const Home: React.FC = () => {
                 sx={{
                     flexGrow: 1,
                     display: 'flex',
-                    alignItems: 'center',
+                    alignItems: 'flex-start', // 콘텐츠를 위에서부터 시작
                     justifyContent: 'center',
                     flexDirection: 'column',
-                    gap: 2,
-                    backgroundColor: '#f5f5f5',
+                    position: 'relative',
+                    overflow: 'hidden',
                 }}
             >
-                <Paper
-                    elevation={3}
+                {/* 배경 전용 레이어 */}
+                <Box
                     sx={{
-                        p: 4,
-                        textAlign: 'center',
-                        borderRadius: '12px',
-                        backgroundColor: '#fff',
-                        maxWidth: '400px',
+                        position: 'absolute',
+                        top: '15%',
+                        left: 0,
+                        width: '100%',
+                        height: '30%',
+                        backgroundImage: `url(${logo})`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'center top',
+                        backgroundSize: 'contain',
+                        opacity: 0.4,
+                        zIndex: 1,
+                        pointerEvents: 'none',
+                    }}
+                />
+
+                {/* 실제 콘텐츠 */}
+                <Box
+                    sx={{
+                        zIndex: 2,
+                        marginTop: '15vh',
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'center',
                     }}
                 >
-                    {isLoggedIn ? (
-                        <Button
-                            variant="contained"
-                            onClick={handleCreateRoomAndNavigate}
-                            sx={{
-                                fontSize: '18px',
-                                padding: '12px 24px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: 1,
-                                borderRadius: '8px',
-                                textTransform: 'none',
-                                backgroundColor: '#34A853',
-                                color: '#fff',
-                                '&:hover': {
-                                    backgroundColor: '#2b8c43',
-                                },
-                            }}
-                        >
-                            <CameraAltIcon />
-                            {t('createRoom')}
-                        </Button>
-
-                    ) : (
-                        <Button
-                            variant="contained"
-                            onClick={() => login()}
-                            sx={{
-                                fontSize: '18px',
-                                padding: '12px 24px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: 1,
-                                borderRadius: '8px',
-                                textTransform: 'none',
-                                backgroundColor: '#4285F4',
-                                color: '#fff',
-                                '&:hover': {
-                                    backgroundColor: '#357ae8',
-                                },
-                            }}
-                        >
-                            <GoogleIcon style={{ width: '20px', height: '20px' }} />
-                            {t('loginWithGoogle')}
-                        </Button>
-
-                    )}
-                </Paper>
+                    <Paper
+                        elevation={3}
+                        sx={{
+                            backgroundColor: '#fff',
+                            padding: 4,
+                            borderRadius: 2,
+                        }}
+                    >
+                        {isLoggedIn ? (
+                            <Button
+                                variant="contained"
+                                onClick={handleCreateRoomAndNavigate}
+                                sx={{
+                                    fontSize: '18px',
+                                    padding: '12px 24px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 1,
+                                    borderRadius: '8px',
+                                    textTransform: 'none',
+                                    backgroundColor: '#c62828',
+                                    opacity: 0.9,
+                                    color: '#fff',
+                                }}
+                            >
+                                <CameraAltIcon />
+                                {t('createRoom')}
+                            </Button>
+                        ) : (
+                            <Button
+                                variant="contained"
+                                onClick={() => login()}
+                                sx={{
+                                    fontSize: '18px',
+                                    padding: '12px 24px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 1,
+                                    borderRadius: '8px',
+                                    textTransform: 'none',
+                                    backgroundColor: '#fff',
+                                    color: '#000',
+                                }}
+                            >
+                                <GoogleIcon style={{ width: '20px', height: '20px' }} />
+                                {t('loginWithGoogle')}
+                            </Button>
+                        )}
+                    </Paper>
+                </Box>
             </Box>
         </Box>
     );

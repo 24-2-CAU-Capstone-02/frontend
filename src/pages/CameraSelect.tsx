@@ -90,7 +90,7 @@ const CameraSelect: React.FC = () => {
             </Backdrop>
 
             {/* Header */}
-            <AppBar position="static" style={{ backgroundColor: '#4caf50' }}>
+            <AppBar position="static" style={{ backgroundColor: '#c62828' }}>
                 <Toolbar>
                     <Typography variant="h6" style={{ flexGrow: 1 }}>
                         {t('cameraSelect')}
@@ -129,7 +129,7 @@ const CameraSelect: React.FC = () => {
                         style={{
                             marginBottom: '16px',
                             fontWeight: 'bold',
-                            color: '#4caf50',
+                            color: '#000',
                         }}
                     >
                         {t('uploadMenuImage')}
@@ -187,10 +187,11 @@ const CameraSelect: React.FC = () => {
                             variant="outlined"
                             component="span"
                             style={{
-                                borderColor: '#4caf50',
-                                color: '#4caf50',
+                                borderColor: '#c62828',
+                                color: '#c62828',
                                 marginBottom: '16px',
                                 fontWeight: 'bold',
+                                opacity: .8
                             }}
                             startIcon={<CloudUploadIcon />}
                         >
@@ -209,6 +210,7 @@ const CameraSelect: React.FC = () => {
                             fontWeight: 'bold',
                             fontSize: '16px',
                             width: '100%',
+                            backgroundColor: '#c62828',
                         }}
                     >
                         {t('upload')}
