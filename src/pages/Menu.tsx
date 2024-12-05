@@ -382,7 +382,7 @@ const Menu: React.FC = () => {
             <Container style={{paddingBottom: '80px'}}>
                 <Slider {...sliderSettings}>
                     {groupedData.map((group, index) => (
-                        <Container key={index} style={{paddingBottom: '80px'}}>
+                        <Container key={index}>
                             <Typography variant="h5" gutterBottom align="center">
                                 {t('menuInformation')}
                             </Typography>
@@ -498,6 +498,10 @@ const Menu: React.FC = () => {
                                     </Grid>
                                 ))}
                             </Grid>
+
+                            <Typography variant="body2" color="textSecondary" style={{padding: '16px'}}>
+                                {t('spicyAndAllergyWarning')}
+                            </Typography>
                         </Container>
                     ))}
                 </Slider>

@@ -124,6 +124,7 @@ const FooterWithCart: React.FC<{
                     color: '#fff',
                     textTransform: 'none',
                     borderRadius: '0',
+                    height: '56px',
                 }}
             >
                 <Box
@@ -189,17 +190,18 @@ const FooterWithCart: React.FC<{
                             boxSizing: 'border-box',
                         }}
                     >
-
                         <IconButton
                             onClick={handleExportImage}
                             sx={{
                                 position: 'absolute',
                                 top: 8,
                                 right: 8,
+                                color: '#4682B4',
                             }}
                         >
                             <ImageIcon />
                         </IconButton>
+
 
                         <Typography id="cart-modal-title" variant="h6" gutterBottom>
                         {t('selectedMenuItems')}

@@ -89,6 +89,7 @@ i18n.use(initReactI18next).init({
                 "sharedMenu": "Shared Menu",
                 "personalMenu": "Personal Menu",
                 "loginToOrder": "Please log in to order.",
+                "spicyAndAllergyWarning": "Spiciness and allergy information may vary by restaurant. Please double-check with the restaurant.",
             }
         },
         ko: {
@@ -176,6 +177,7 @@ i18n.use(initReactI18next).init({
                 "sharedMenu": "공유된 메뉴",
                 "personalMenu": "개인 메뉴",
                 "loginToOrder": "주문을 위해 로그인해주세요.",
+                "spicyAndAllergyWarning": "맵기와 알레르기 정보는 음식점마다 다를 수 있습니다. 음식점에 문의해주세요.",
             }
         }
     },
