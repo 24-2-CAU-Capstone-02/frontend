@@ -301,7 +301,7 @@ const Menu: React.FC = () => {
 
         const updatedItems = await Promise.all(
             items.map(async (item) => {
-                const query = encodeURIComponent(item.menuName + '음식사진');
+                const query = encodeURIComponent(item.generalizedName + '음식사진');
                 const endpoint = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${query}&searchType=image`;
 
                 try {
