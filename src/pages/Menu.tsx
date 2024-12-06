@@ -306,24 +306,28 @@ const Menu: React.FC = () => {
 
             for (const item of items) {
                 let imageUrl = '';
+                let subUrl = '';
                 let attempt = 0;
 
                 while (attempt < maxRetries) {
                     try {
+                        // API 요청
                         const response: any = await axiosClient.post('/menu/image', {
                             menuName: item.generalizedName,
                         });
 
+                        // 응답에서 imageUrl과 subUrl 가져오기
                         imageUrl = response.imageUrl || '';
+                        subUrl = response.subUrl || '';
 
                         // imageUrl이 https로 시작하면 http로 변경
                         if (imageUrl.startsWith('https://')) {
                             imageUrl = imageUrl.replace('https://', 'http://');
                         }
 
-                        console.log('Fetched image for', item.menuName, ':', imageUrl);
+                        console.log('Fetched image for', item.menuName, ':', imageUrl, subUrl);
 
-                        break;
+                        break; // 성공적으로 데이터를 가져오면 루프 종료
                     } catch (error) {
                         attempt++;
                         console.error(
@@ -342,7 +346,8 @@ const Menu: React.FC = () => {
 
                 updatedItems.push({
                     ...item,
-                    imageUrl: imageUrl || '', // 요청 실패 시 기본값
+                    imageUrl: imageUrl || '',
+                    subUrl: subUrl || '',
                 });
             }
 
@@ -352,6 +357,7 @@ const Menu: React.FC = () => {
             return items.map((item) => ({
                 ...item,
                 imageUrl: '',
+                subUrl: '', // 전체 요청 실패 시 기본값
             }));
         }
     };
@@ -443,7 +449,7 @@ const Menu: React.FC = () => {
                                                 onError={(e) => {
                                                     const target = e.target as HTMLImageElement;
                                                     target.onerror = null; // 무한 루프 방지
-                                                    target.src = defaultImage; // 이미지 로드 실패 시 기본 이미지로 대체
+                                                    target.src = item.subUrl; // 이미지 로드 실패 시 대체 이미지로 재시도
                                                 }}
                                                 style={{ borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}
                                             />

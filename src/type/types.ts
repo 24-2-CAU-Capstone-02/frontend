@@ -3,6 +3,7 @@ export interface MenuItem {
     roomId: number;
     imageId: number;
     imageUrl: string;
+    subUrl: string;
     menuName: string;
     price: number;
     status: string;
