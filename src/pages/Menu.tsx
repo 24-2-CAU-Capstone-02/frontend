@@ -424,10 +424,14 @@ const Menu: React.FC = () => {
                                     width: '100%',
                                     height: 'auto',
                                     borderRadius: '8px',
-                                    marginBottom: '16px',
+                                    marginBottom: '6px',
                                     boxShadow: '0 8px 16px rgba(0, 0, 0, 0.2)',
                                 }}
                             />
+
+                            <Typography variant="body2" color="textSecondary" style={{padding: '10px', fontSize: '12px', marginBottom: '10px'}}>
+                                {t('spicyAndAllergyWarning')}
+                            </Typography>
 
                             <ActionButtons roomId={roomId}/>
 
@@ -535,10 +539,6 @@ const Menu: React.FC = () => {
                                     </Grid>
                                 ))}
                             </Grid>
-
-                            <Typography variant="body2" color="textSecondary" style={{padding: '10px', fontSize: '12px'}}>
-                                {t('spicyAndAllergyWarning')}
-                            </Typography>
                         </Container>
                     ))}
                 </Slider>
