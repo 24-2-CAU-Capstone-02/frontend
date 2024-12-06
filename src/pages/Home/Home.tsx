@@ -139,6 +139,8 @@ const Home: React.FC = () => {
                         width: '100%',
                         display: 'flex',
                         justifyContent: 'center',
+                        flexDirection: 'column', // 버튼들을 세로로 배치
+                        alignItems: 'center',
                     }}
                 >
                     <Paper
@@ -147,29 +149,35 @@ const Home: React.FC = () => {
                             backgroundColor: '#fff',
                             padding: 4,
                             borderRadius: 2,
+                            display: 'flex',
+                            flexDirection: 'column', // 버튼들을 세로로 배치
+                            gap: 2, // 버튼 간 간격
+                            alignItems: 'center',
                         }}
                     >
                         {isLoggedIn ? (
-                            <Button
-                                variant="contained"
-                                onClick={handleCreateRoomAndNavigate}
-                                sx={{
-                                    fontSize: '18px',
-                                    padding: '12px 24px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: 1,
-                                    borderRadius: '8px',
-                                    textTransform: 'none',
-                                    backgroundColor: '#c62828',
-                                    opacity: 0.9,
-                                    color: '#fff',
-                                }}
-                            >
-                                <CameraAltIcon />
-                                {t('createRoom')}
-                            </Button>
+                            <>
+                                <Button
+                                    variant="contained"
+                                    onClick={handleCreateRoomAndNavigate}
+                                    sx={{
+                                        fontSize: '18px',
+                                        padding: '12px 24px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: 1,
+                                        borderRadius: '8px',
+                                        textTransform: 'none',
+                                        backgroundColor: '#c62828',
+                                        opacity: 0.9,
+                                        color: '#fff',
+                                    }}
+                                >
+                                    <CameraAltIcon />
+                                    {t('createRoom')}
+                                </Button>
+                            </>
                         ) : (
                             <Button
                                 variant="contained"
@@ -192,6 +200,27 @@ const Home: React.FC = () => {
                             </Button>
                         )}
                     </Paper>
+
+                    {
+                        isLoggedIn == true ? (
+                    <Typography
+                        onClick={() => {
+                            localStorage.removeItem('accessToken'); // accessToken 삭제
+                            setIsLoggedIn(false); // 상태 업데이트
+                            setUserName(null); // 사용자 이름 초기화
+                            alert('Access Token has been removed!');
+                        }}
+                        sx={{
+                            fontSize: '14px',
+                            padding: '10px 20px',
+                        }}
+                    >
+                        Logout
+                    </Typography>
+                        ) : null
+                    }
+
+
                 </Box>
             </Box>
         </Box>
